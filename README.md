@@ -1,6 +1,6 @@
 # GenCAD - FreeCAD AI Workbench
 
-**GenCAD** is a FreeCAD workbench for creating, modifying, and exporting FreeCAD objects to code using natural language. Powered by LLM (Large Language Models), it enables you to generate CAD models from text descriptions and modify existing models through conversational prompts.
+**GenCAD** is a FreeCAD AI workbench for creating, modifying, and exporting FreeCAD objects to code using natural language. Powered by LLM (Large Language Models), it enables you to generate CAD models from text descriptions and modify existing models through conversational prompts.
 
 ## Features
 
