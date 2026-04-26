@@ -14,7 +14,7 @@ from FreeCAD import Vector
 import traceback
 
 # Add the CADomatic project path to sys.path so we can import modules
-cadomatic_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "cadomatic")
+cadomatic_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "cadomatic")
 sys.path.insert(0, cadomatic_path)
 
 # Import dialogs
@@ -33,7 +33,7 @@ Gui.SendMsgToActiveView("ViewFit")
 
 def _get_gen_dir() -> str:
     """Get the generated files directory path."""
-    return os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "cadomatic", "generated")
+    return os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "cadomatic", "generated")
 
 
 def _get_gen_script_path() -> str:
@@ -131,7 +131,7 @@ def get_selected_objects_python():
             return None
 
         # Import the objects_to_python module from utils
-        utils_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "utils")
+        utils_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "utils")
         if not os.path.exists(utils_path):
             FreeCAD.Console.PrintError(f"Utils path not found: {utils_path}\n")
             return None
@@ -230,7 +230,7 @@ def get_selected_objects_python_without_tmp_doc():
             return None
 
         # Import the objects_to_python module from utils
-        utils_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "utils")
+        utils_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "utils")
         if not os.path.exists(utils_path):
             FreeCAD.Console.PrintError(f"Utils path not found: {utils_path}\n")
             return None

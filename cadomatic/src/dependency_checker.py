@@ -191,7 +191,7 @@ def deps_check_and_install(FreeCAD, FreeCADGui, notice_if_already_installed=Fals
         import os
         from PySide import QtWidgets
         # Add path to project root to import cadomatic
-        base_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD")
+        base_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad")
         sys.path.append(base_path)
         
         try:

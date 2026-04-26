@@ -8,15 +8,15 @@ import FreeCAD
 GEMINI_API_KEY = load_env.GEMINI_API_KEY_IMAGE
 
 # Determine the generated directory based on context
-if "FreeCAD" in globals() or hasattr(os, 'path') and os.path.exists(os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD")):
+if "FreeCAD" in globals() or hasattr(os, 'path') and os.path.exists(os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad")):
     # Running within FreeCAD GenCAD workbench
-    gen_dir = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "cadomatic", "generated")
+    gen_dir = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "cadomatic", "generated")
 else:
     # Running standalone
     gen_dir = "generated"
 
 image_path_cad = Path(gen_dir) / "screenshot.png" # Update image paths
-image_path_downloaded = os.path.join(os.path.expanduser("~"), "GenCAD", "flange_downloaded.jpeg") # Update image paths
+image_path_downloaded = os.path.join(os.path.expanduser("~"), "freecad.gencad", "flange_downloaded.jpeg") # Update image paths
 
 llm = ChatGoogleGenerativeAI(
     model="gemma-3-12b-it",

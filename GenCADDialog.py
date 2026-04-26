@@ -11,7 +11,7 @@ import subprocess
 
 # Add the CADomatic project path to sys.path so we can import modules
 import FreeCAD
-mod_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "cadomatic")
+mod_path = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "cadomatic")
 sys.path.insert(0, mod_path)
 
 from cadomatic.src.dependency_checker import deps_check_and_install

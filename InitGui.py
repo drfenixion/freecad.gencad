@@ -36,7 +36,7 @@ class GenCADWorkbench(Workbench):
     """
     GenCAD workbench object
     """
-    Icon = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "GenCAD", "gencad_icon.svg")
+    Icon = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "freecad.gencad", "gencad_icon.svg")
     # Icon = """
     # /* XPM */
     # static char * genCAD_xpm[] = {
