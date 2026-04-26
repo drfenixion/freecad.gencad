@@ -84,12 +84,6 @@ Choose your preferred LLM backend:
 - **Ollama** — Local or cloud models (supports `gemini-3-flash-preview:cloud` - may be free cloud quota)
 - **RouterAIru** — Alternative cloud provider
 
-#### API Keys
-Enter your API keys for OpenRouter and/or RouterAIru. Keys can be hidden/shown using the toggle button.
-
-#### Model Configuration
-Set the model name for each provider. Default: `google/gemini-3-flash-preview`
-
 ### OPTIONAL: Ollama Setup (Linux)
 
 ```bash
