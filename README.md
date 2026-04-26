@@ -178,4 +178,4 @@ GenCAD/
 
 ## Tags
 
-`AI` · `generative` · `text to object` · `modify by text` · `object to code`
+`AI` · `generative` · `text to CAD object` · `modify CAD object by text` · `convert CAD object to code`
