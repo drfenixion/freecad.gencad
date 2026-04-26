@@ -3,7 +3,7 @@
 
   <name>GenCAD</name>
   <description>GenCAD is a FreeCAD workbench for creating, modifying, and exporting FreeCAD objects to code using natural language.</description>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
   <date>2026-04-26</date>
   <maintainer email="it.project.devel@gmail.com">Vasily S</maintainer>
   <license file="LICENSE">LGPL-2.1-or-later</license>
