@@ -6,31 +6,31 @@ import FreeCAD
 import FreeCADGui
 from PySide import QtGui
 from FreeCADGui import Workbench
-from cadomatic.src.dependency_checker import pip_install
 
-def attach_debugger():
-    try:
-        # For v0.21:
-        from addonmanager_utilities import get_python_exe
-    except (ModuleNotFoundError, ImportError, AttributeError):
-        # For v0.22/v1.0:
-        from freecad.utils import get_python_exe    
-    import debugpy
-    debugpy.configure(python=get_python_exe())
-    debugpy.listen(("0.0.0.0", 5678))
-    debugpy.wait_for_client()
-    debugpy.trace_this_thread(True)
-    debugpy.debug_this_thread()
-    print('DEBUG attached.')
+# def attach_debugger():
+#     try:
+#         # For v0.21:
+#         from addonmanager_utilities import get_python_exe
+#     except (ModuleNotFoundError, ImportError, AttributeError):
+#         # For v0.22/v1.0:
+#         from freecad.utils import get_python_exe    
+#     import debugpy
+#     debugpy.configure(python=get_python_exe())
+#     debugpy.listen(("0.0.0.0", 5678))
+#     debugpy.wait_for_client()
+#     debugpy.trace_this_thread(True)
+#     debugpy.debug_this_thread()
+#     print('DEBUG attached.')
 
-try:
-    attach_debugger()
-except:
-    pip_install('debugpy')
-    try:
-        attach_debugger()
-    except:
-        pass
+# try:
+#     attach_debugger()
+# except:
+#     from cadomatic.src.dependency_checker import pip_install
+#     pip_install('debugpy')
+#     try:
+#         attach_debugger()
+#     except:
+#         pass
 
 class GenCADWorkbench(Workbench):
     """
