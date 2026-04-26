@@ -173,6 +173,7 @@ GenCAD/
 | Screenshot | Description |
 |------------|-------------|
 | ![Create Window](images/screens/create_window.png) | Create Model dialog - enter your description |
+| ![Create Window In Progress](images/screens/create_window_progress.png) | Creation Model in progress |
 | ![Created](images/screens/created.png) | Generated model result |
 | ![Edit Window](images/screens/edit_window.png) | Edit/Modify Model dialog |
 | ![Edit Window In Progress](images/screens/edit_window_progress.png) | Modification in progress |
