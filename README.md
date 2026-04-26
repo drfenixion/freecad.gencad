@@ -16,9 +16,7 @@
   - RAG context (optional)
   - Fasteners workbench integration (optional)
 
-<p align="center">
-  <img src="images/gencad_big_logo.png" alt="GenCAD Logo" width="400">
-</p>
+![GenCAD Logo](images/gencad_big_logo.png)
 
 ## Installation
 
