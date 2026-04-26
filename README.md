@@ -6,7 +6,7 @@
 
 - **Text-to-CAD Generation**: Describe your CAD model in natural language and get a FreeCAD model (with Build Tree)
 - **Model Modification**: Select existing objects and modify them using text descriptions
-- **Export to Macro**: Convert selected objects to Python code and save as a FreeCAD macro
+- **Export Objects to Macro**: Convert selected objects to Python code and save as a FreeCAD macro
 - **Multiple LLM Providers**: Support for OpenRouter, Ollama (local/cloud), and RouterAIru
 - **Configurable Modeling Options**:
   - Part structure: Build Tree of Part or Bake Part
