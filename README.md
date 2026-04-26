@@ -13,7 +13,7 @@
   - Modeling approach: Auto, Sketches, or Primitives
   - Workbench: PartDesign or Part
   - Circular placement: PolarPattern or Placement
-  - RAG context (optional)
+  - RAG context with FreeCAD documentaion (optional)
   - Fasteners workbench integration (optional)
 
 ![GenCAD Logo](images/gencad_big_logo.png)
