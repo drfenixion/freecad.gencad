@@ -351,13 +351,13 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
     def _show_disclaimer(self):
         """Show the disclaimer message dialog."""
         disclaimer_text = (
-            "GenCAD tests the LLM-generated code directly in FreeCAD using its Python interpreter.\n\n"
+            "GenCAD automatically tests the LLM-generated code directly in FreeCAD using its Python interpreter.\n\n"
             "By using GenCAD, you should understand that the generated code could theoretically cause harm to your files. "
             "In practice, during all my testing time, there has not been a single case of problems caused by the generated code. "
             "Nevertheless, remember that the generation depends on your request, model and has a randomness factor. "
-            "'Generation depends on your request' means - Do not ask GenCAD for anything that could harm your system. "
-            "You use GenCAD at your own risk and under your own responsibility. "
-            "If you want more security, use an isolated environment for FreeCAD.\n\n"
+            "'Generation depends on your request' means - Do not ask GenCAD for anything that could harm your system.\n\n"
+            "IMPORTANT: You use GenCAD at your own risk and under your own responsibility. "
+            "If you want more safety, use an isolated environment for FreeCAD.\n\n"
             "The generated model may be inaccurate or incorrect. Always verify the result.\n\n"
             "IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). "
             "Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.\n\n"

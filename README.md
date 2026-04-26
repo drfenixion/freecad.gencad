@@ -156,13 +156,13 @@ GenCAD/
 
 ## Disclaimer
 
-> **GenCAD tests the LLM-generated code directly in FreeCAD using its Python interpreter.**
+> **GenCAD automatically tests the LLM-generated code directly in FreeCAD using its Python interpreter.**
 >
 > By using GenCAD, you should understand that the generated code could theoretically cause harm to your files. In practice, during all testing time, there has not been a single case of problems caused by the generated code. Nevertheless, remember that the generation depends on your request, model and has a randomness factor.
 >
 > **"Generation depends on your request"** means — do not ask GenCAD for anything that could harm your system.
 >
-> You use GenCAD at your own risk and under your own responsibility. If you want more security, use an isolated environment for FreeCAD.
+> **IMPORTANT: You use GenCAD at your own risk and under your own responsibility. If you want more safety, use an isolated environment for FreeCAD.**
 >
 > **The generated model may be inaccurate or incorrect. Always verify the result.**
 >
