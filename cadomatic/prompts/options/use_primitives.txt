@@ -1,0 +1,2 @@
+Use primitive objects (cobe, cylinder, sphere, cone, etc.) instead of sketches where posible. 
+You can use boolean operation with primitive objects if need.

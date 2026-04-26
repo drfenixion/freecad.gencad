@@ -1,0 +1,4 @@
+Do bake of object:
+Dont add intermediate objects to doc. Work with them`s shape and result shape set to obj like:
+obj = doc.addObject("Part::Feature", "Semantic_name")
+obj.Shape = intermidiate_obj_shape

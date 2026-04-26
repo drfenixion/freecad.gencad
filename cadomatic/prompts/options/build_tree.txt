@@ -1,0 +1,5 @@
+Build tree requested.
+Dont use 
+obj = doc.addObject("Part::Feature", "Name")
+obj.Shape = origin_obj_shape
+Use origin objects in it primitive objects.

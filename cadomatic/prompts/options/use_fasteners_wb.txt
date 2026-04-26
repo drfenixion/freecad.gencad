@@ -1,0 +1,309 @@
+Fasteners can be attached or unattached. Attached fasteners have a DataBase Object, a circular edge, and their DataPlacement is dynamically linked to that object. The  Fasteners Move command can be used to attach or detach a fastener.
+
+Unattached fasteners
+Select the desired fastener by clicking its button or by picking it from the menu.
+A fastener is created at the origin.
+Optionally change the dimensions and other properties of the fastener:
+Select the fastener.
+Go to the Data tab of the Property View.
+Change the required properties.
+Attached fasteners
+ 
+
+On the left two selected circular edges. On the right the attached fasteners.
+
+Specify if the selected holes are tap holes or pass holes by selecting  Fasteners MatchTypeInner or  Fasteners MatchTypeOuter respectively (not used for countersunk screws).
+Select one or more circular edges and/or faces with circular edges. For countersunk screws the top edge of the chamfered hole must be selected.
+Select the desired fastener by clicking its button or by picking it from the menu.
+A fastener is attached to each of the selected circular edges.
+The default dimensions of each fastener depend on the radius of the circular edge it is attached to. Countersunk screws are matched by their head diameter, other fasteners are matched by their shaft diameter.
+Optionally change the dimensions and other properties of the fasteners. See above.
+Fasteners that appear upside-down can be inverted with the  Fasteners Flip command or by changing their DataInvert property.
+Optionally change the DataOffset property to create space between the fasteners and the edges they are attached to.
+Notes
+To generate threads, the DataThread property of a fastener must be changed to true. Generating threads is costly. Recomputes take much longer if there are many fasteners with threads in a document.
+The DataInvert property and the DataOffset property are ignored for unattached fasteners.
+
+Commands of usage Fasterners. 
+Dont use construction like - screw = doc.addObject("Fasteners::FSISO4017", f"Screw{i+1}"), screws = doc.findObjects(Type="Fasteners::FSISO4017")!  No module named 'Fasteners'!
+Use only this commands to work with fasteners: 
+    Insert fastener:
+>>> # Gui.activateWorkbench("FastenersWorkbench") # Must be activated before add fasterner!
+>>> # Gui.Selection.addSelection('DocumentName','BodyName','BodyName.EdgeNameWhereMustBeFastener')  # filter suited EdgeNameWhereMustBeFastener via needed placement of fastener.
+>>> # FastenerName like FSASMEB18.2.1.1. consist of: prefix - 'FS' + standart - 'ASME' + type - 'B18.2.1.1'. Use can select suited fastener from data below.
+>>> # Gui.runCommand(FastenerName,0)
+    Invert fastener: Invert the orientation of attached fasteners.
+>>> # Gui.activateWorkbench("FastenersWorkbench")
+>>> # Gui.Selection.addSelection('DocumentName','FastenerObjName','EdgeName')
+>>> # Gui.runCommand('Fasteners_Flip',0)
+
+For placemnt of Fasteners it need to culculate Gui.Selection.addSelection('FlangeWithFasteners','Screw001')
+
+# Add Fasteners example
+# We identify the circular edges created by the pocket pattern on the top face
+doc.recompute()
+edge_names = []
+shape = pattern.Shape
+for i, edge in enumerate(shape.Edges):
+    if hasattr(edge.Curve, 'Radius'):
+        if math.isclose(edge.Curve.Radius, SCREW_RAD, abs_tol=0.001):
+            center = edge.Curve.Center
+            # Top face is at THICKNESS + NECK_H (if on neck) or THICKNESS
+            if math.isclose(center.z, THICKNESS, abs_tol=0.001):
+                edge_names.append(f"Edge{i+1}")
+
+# Using Fasteners workbench
+for i in range(min(len(edge_names), NUM_FASTENERS)):
+    Gui.Selection.clearSelection()
+    Gui.Selection.addSelection(doc.Name, pattern.Name, edge_names[i]) # Dont use whole body.Name here. pattern.Name must be subelement of body. Dont use body.Tip.Name here!
+    Gui.runCommand('FSISO4017', 0)
+    
+    doc.recompute()
+    new_objs = doc.findObjects("Part::FeaturePython")
+    filtered_objs = [obj for obj in new_objs if obj.Type == "ISO4017"] # DONT use in obj.Label here!
+    
+    if filtered_objs:
+        last_screw = filtered_objs[-1]
+        last_screw.Diameter = 'M5'
+        last_screw.Length = '14'
+
+
+ Match for tap hole: Consider circular edges to be tap holes when new fasteners are attached to them.
+ Match for pass hole: Consider circular edges to be pass holes when new fasteners are attached to them.
+ Generate BOM: Create a spreadsheet with a bill of materials for the fasteners in the document.
+ Screw calculator: Show a calculator to determine the tap hole size of screws.
+ 3D Print Settings: Show 3D print settings for threads.
+ Change fastener parameters: Change the parameters of fasteners.
+
+
+Miscellaneous head bolts
+ ASME B18.2.1.1 UNC square head bolt.
+ ASME B18.5 UNC Round head square neck bolt.
+ DIN 478 Square head bolt with collar.
+ DIN 603 Round head square neck bolt.
+ ISO 2342 Headless screw with shank
+Hexagon head screws and bolts
+ ASME B18.2.1.6 UNC hexagon head screw.
+ ASME B18.2.1.8 UNC hexagon head screw with flange.
+ DIN 571 Hexagon head wood screw.
+ DIN 933 Hexagon head screw.
+ DIN 961 Hexagon head screw.
+ EN 1662 Hexagon head bolt with flange, small series.
+ EN 1665 Hexagon head bolt with flange, heavy series.
+ ISO 4014 Hexagon head bolt. Product grades A and B.
+ ISO 4015 Hexagon head bolt with reduced shank.
+ ISO 4016 Hexagon head bolt. Product grade C.
+ ISO 4017 Hexagon head screw. Product grades A and B.
+ ISO 4018 Hexagon head screw. Product grade C.
+ ISO 4162 Hexagon bolt with flange, small series. Product grade A with driving feature of product grade B.
+ ISO 8676 Hexagon head screw with fine pitch thread. Product grades A and B.
+ ISO 8765 Hexagon head bolt with fine pitch thread.
+ ISO 15071 Hexagon bolt with flange, small series. Product grade A.
+ ISO 15072 Hexagon bolt with flange and fine pitch thread, small series. Product grade A.
+Hexagon socket screws
+ ASME B18.3.1A UNC hexagon socket head cap screw.
+ ASME B18.3.1G UNC hexagon socket head cap screw with low head.
+ ASME B18.3.2 UNC hexagon socket countersunk head screw.
+ ASME B18.3.3A UNC hexagon socket button head screw.
+ ASME B18.3.3B UNC hexagon socket button head screw with flange.
+ ASME B18.3.4 UNC hexagon socket head shoulder screw.
+ DIN 6912 Hexagon socket head cap screw with low head with center.
+ DIN 7984 Hexagon socket head cap screw with low head.
+ ISO 2936 Hexagon socket screw key.
+ ISO 4762 Hexagon socket head cap screw.
+ ISO 7379 Hexagon socket head shoulder screw.
+ ISO 7380-1 Hexagon socket button head screw.
+ ISO 7380-2 Hexagon socket button head screw with flange.
+ ISO 10642 Hexagon socket countersunk head screw.
+Hexalobular socket head screws
+ ISO 14579 Hexalobular socket head cap screw.
+ ISO 14580 Hexalobular socket cheese head screw.
+ ISO 14581 Hexalobular socket countersunk flat head screw.
+ ISO 14582 Hexalobular socket countersunk head screw, high head.
+ ISO 14583 Hexalobular socket pan head screw.
+ ISO 14584 Hexalobular socket raised countersunk head screw.
+Slotted head screws
+ ASME B18.6.1.2 Slotted flat countersunk head wood screw.
+ ASME B18.6.1.4 Slotted oval countersunk head wood screw.
+ ASME B18.6.3.1A UNC slotted countersunk flat head screw.
+ ASME B18.6.3.4A UNC slotted oval countersunk head screw.
+ ASME B18.6.3.9A UNC slotted pan head screw.
+ ASME B18.6.3.10A UNC Slotted fillister head screw.
+ ASME B18.6.3.12A UNC Slotted truss head screws.
+ ASME B18.6.3.16A UNC Slotted round head screw.
+ DIN 84 (superseded by ISO 1207) Slotted cheese head screw. Product grade A.
+ DIN 96 Slotted half round head wood screw.
+ GOST 1144-1 Slotted half round head wood screw.
+ GOST 1144-2 Slotted half round head wood screw.
+ ISO 1207 Slotted cheese head screw. Product grade A.
+ ISO 1580 Slotted pan head screw. Product grade A.
+ ISO 2009 Slotted countersunk flat head screw. Product grade A.
+ ISO 2010 Slotted raised countersunk head screw. Product grade A.
+H cross head screws
+ ASME B18.6.1.3 Flat countersunk head wood screw.
+ ASME B18.6.1.5 Oval countersunk head wood screw.
+ ASME B18.6.3.1B UNC flat countersunk head screw.
+ ASME B18.6.3.4B UNC oval countersunk head screw.
+ ASME B18.6.3.9B UNC pan head screw.
+ ASME B18.6.3.10B UNC fillister head screw.
+ ASME B18.6.3.12C UNC truss head screws.
+ ASME B18.6.3.16B UNC round head screw.
+ DIN 967 Pan head screw with collar.
+ DIN 7996 Pan head wood screw.
+ GOST 1144-3 Pan head wood screw.
+ GOST 1144-4 Pan head wood screw.
+ ISO 7045 Pan head screw. Product grade A.
+ ISO 7046 Countersunk flat head screw. Product grade A.
+ ISO 7047 Raised countersunk head screw. Product grade A.
+ ISO 7048 Cheese head screw.
+ ISO 7049-C Pan head self tapping screws with conical point.
+ ISO 7049-F Pan head self tapping screws with flat point.
+ ISO 7049-R Pan head self tapping screws with rounded point.
+Set screws
+ ASME B18.3.5A UNC hexagon socket set screw with flat point.
+ ASME B18.3.5B UNC hexagon socket set screw with cone point.
+ ASME B18.3.5C UNC hexagon socket set screw with dog point.
+ ASME B18.3.5D UNC hexagon socket set screw with cup point.
+ ISO 4026 Hexagon socket set screw with flat point.
+ ISO 4027 Hexagon socket set screw with cone point.
+ ISO 4028 Hexagon socket set screw with dog point.
+ ISO 4029 Hexagon socket set screw with cup point.
+ ISO 4766 Slotted socket set screw with flat point.
+ ISO 7434 Slotted socket set screw with cone point.
+ ISO 7435 Slotted socket set screw with long dog point.
+ ISO 7436 Slotted socket set screw with cup point.
+Thumb screws
+ DIN 464 Knurled thumb screw, high type.
+ DIN 465 Slotted knurled thumb screw, high type.
+ DIN 653 Knurled thumb screw, low type.
+Ground screws
+ Ground Screw Round plate ground screw.
+Nuts
+ ASME B18.2.2.1A UNC hexagon machine screw nut.
+ ASME B18.2.2.1B UNC square machine screw nut.
+ ASME 18.2.2.2 UNC square nut.
+ ASME B18.2.2.4A UNC hexagon nut.
+ ASME B18.2.2.4B UNC hexagon thin nut.
+ ASME 18.2.2.5 UNC hexagon castle nut.
+ ASME 18.2.2.12 UNC hexagon nut with flange.
+ ASME 18.2.2.13 UNC hexagon coupling nut.
+ ASME 18.6.9A Wing nut, type A.
+ DIN 315 Wing nut.
+ DIN 557 Square nut.
+ DIN 562 Square nut.
+ DIN 917 Cap nut, low form.
+ DIN 928 Square weld nut.
+ DIN 929 Hexagon weld nut.
+ DIN 934 (superseded by ISO 4035 and ISO 8673) Hexagon thin nut chamfered. Product grades A and B.
+ DIN 935 Hexagon castle nut.
+ DIN 985 Nyloc nut.
+ DIN 1587 Cap nut.
+ DIN 6330 Hexagon nut 1.5d high.
+ DIN 6331 Hexagon with collar 1.5d high.
+ DIN 6334 Hexagon coupling nut.
+ DIN 7967 Self-locking counter nut.
+ EN 1661 Hexagon nut with flange.
+ GOST 11860-1 Cap nut.
+ ISO 4032 Hexagon nut, style 1. Product grades A and B.
+ ISO 4033 Hexagon high nut, style 2. Product grades A and B.
+ ISO 4034 Hexagon nut, style 1.
+ ISO 4035 Hexagon thin nut chamfered, style 0. Product grades A and B.
+ ISO 4161 Hexagon nut with flange.
+ ISO 7040 Prevailing torque type hexagon nut (with non-metallic insert).
+ ISO 7041 Prevailing torque type hexagon nut (with non-metallic insert), style 2.
+ ISO 7043 Prevailing torque type hexagon nut with flange (with non-metallic insert).
+ ISO 7044 Prevailing torque type all-metal hexagon nut with flange.
+ ISO 7719 Prevailing torque type all-metal hexagon nut.
+ ISO 7720 Prevailing torque type all-metal hexagon nut, style 2.
+ ISO 8673 Hexagon nut with fine pitch thread, style 1. Product grades A and B.
+ ISO 8674 Hexagon high nut with fine pitch thread, style 2. Product grades A and B.
+ ISO 8675 Hexagon thin nut with fine pitch thread, style 0. Product grades A and B.
+ ISO 10511 Prevailing torque type hexagon thin nut (with non-metallic insert).
+ ISO 10512 Prevailing torque type hexagon nut with fine pitch thread (with non-metallic insert).
+ ISO 10513 Prevailing torque type all-metal hexagon nut with fine pitch thread.
+ ISO 10663 Hexagon nut with flange and fine pitch thread.
+ ISO 12125 Prevailing torque type hexagon nut with flange and fine pitch thread (with non-metallic insert).
+ ISO 12126 Prevailing torque type all-metal hexagon nut with flange and fine pitch thread.
+ ISO 21670 Hexagon weld nut with flange.
+ SAE J483a 1 Low cap nut.
+ SAE J483a 2 High cap nut.
+T-slot fasteners
+ DIN 508 T-slot nut.
+ GN 505 Serrated quarter-turn T-slot nut.
+ GN 505.4 Serrated T-slot bolt.
+ GN 506 T-Slot swivel nut.
+ GN 507 T-slot nut.
+ ISO 299 T-Slot nut.
+Washers
+ ASME B18.21.1.12A UN washer, narrow series.
+ ASME B18.21.1.12B UN washer, regular series.
+ ASME B18.21.1.12C UN washer, wide series.
+ DIN 6319C Spherical washer.
+ DIN 6319D Conical seat.
+ DIN 6319G Conical seat.
+ DIN 6340 Washer for clamping devices.
+ ISO 7089 Plain washer, normal series. Product grade A.
+ ISO 7090 Plain washer chamfered, normal series. Product grade A.
+ ISO 7092 Plain washer, small series. Product grade A.
+ ISO 7093-1 Plain washer, large series. Product grade A.
+ ISO 7094 Plain washer, extra large series. Product grade C.
+ ISO 8738 Plain washer for clevis pins.
+ NFE27-619 Countersunk washer.
+Rods, taps and dies
+ Inch threaded rod for tapping holes.
+ Tool object for cutting external inch threads.
+ UNC inch threaded rod.
+ DIN 975 metric threaded rod.
+ Metric threaded rod for tapping holes.
+ Tool object for cutting external metric threads.
+Inserts
+ Heat staked insert.
+ Self-clinching nut.
+ Self-clinching standoff.
+ Self-clinching stud.
+ PCB spacer female/female.
+ PCB standoff female/male.
+ 4 prong threaded wood insert (DIN 1624 Tee nuts).
+Retaining rings
+ DIN 471 External retaining ring.
+ DIN 472 Internal retaining ring.
+ DIN 6799 E-clip retaining ring.
+Nails
+ DIN 1143 Round plain head nail for use in automatic nailing machines.
+ DIN 1144-A Nail for the installation of wood wool composite panels, 20mm round head.
+ DIN 1151-A Round plain head wire nail.
+ DIN 1151-B Round countersunk head wire nail.
+ DIN 1152 Round lost head wire nail.
+ DIN 1160-A Clout or slate nail.
+ DIN 1160-B Clout or slate wide head nail.
+Pins
+ ISO 1234 Split pin.
+ ISO 2338 Parallel pin.
+ ISO 2339 Taper pin.
+ ISO 2340A Clevis pin.
+ ISO 2340B Clevis pin without head (with split pin holes).
+ ISO 2341A Clevis pin with head.
+ ISO 2341B Clevis pin with head (with split pin hole).
+ ISO 8733 Parallel pin with internal thread, unhardened.
+ ISO 8734 Dowel pin.
+ ISO 8735 Parallel pin with internal thread, hardened.
+ ISO 8736 Taper pin with internal thread, unhardened.
+ ISO 8737 Taper pin with external thread, unhardened.
+ ISO 8739 Full-length grooved pin with pilot.
+ ISO 8740 Full-length grooved pin with chamfer.
+ ISO 8741 Half-length reverse taper grooved pin.
+ ISO 8742 Third-length center grooved pin.
+ ISO 8743 Half-length center grooved pin.
+ ISO 8744 Full-length taper grooved pin.
+ ISO 8745 Half-length taper grooved pin.
+ ISO 8746 Grooved pin with round head.
+ ISO 8747 Grooved pin with countersunk head.
+ ISO 8748 Coiled spring pin, heavy duty.
+ ISO 8750 Coiled spring pin, standard duty.
+ ISO 8751 Coiled spring pin, light duty.
+ ISO 8752 Slotted spring pin, heavy duty.
+ ISO 13337 Slotted spring pin, light duty.
+
+
+Posible issue:
+Dont use shape.Center (it does not exist) instead use shape.Curve.Center.

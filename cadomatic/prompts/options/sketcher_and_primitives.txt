@@ -1,0 +1,2 @@
+Use combination of sketches and primitives: sketches for complex profiles and primitives (cube, cylinder, sphere, cone, etc.) for simple geometric features.
+Combine sketch-based features (Pad, Pocket, etc.) with primitive boolean operations for efficient modeling.

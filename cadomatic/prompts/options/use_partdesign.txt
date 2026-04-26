@@ -1,0 +1,2 @@
+Use PartDesign workbench instead of Part workbench!
+if use PartDesign_Pocket, PartDesign_Hole or any other negative Pad (hole, pocket, etc) always set options: Pocket_obj.Type = 'ThroughAll', Pocket_obj.SideType = 'Symmetric'.

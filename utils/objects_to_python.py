@@ -1,0 +1,607 @@
+# -*- coding: utf-8 -*-
+
+__Version__ = '0.8.7'
+__Date__ = '2025-04-26'
+__License__ = 'LGPL-3.0-or-later'
+__Web__ = ''
+__Wiki__ = 'README.md'
+__Name__ = 'Objects To Python'
+__Comment__ = 'Exports objects from a FreeCAD project to a python script'
+__Author__ = 'Christi, Drfenixion'
+__Icon__ = 'ObjectsToPython.svg'
+__Help__ = 'ObjectsToPython/README.md'
+__Status__ = 'Alpha'
+__Requires__ = 'FreeCAD >= 0.19'
+__Communication__ = 'https://forum.freecad.org/viewtopic.php?f=22&t=34612'
+__Files__ = 'ObjectsToPython/README.md,ObjectsToPython/ObjectsToPython.ui,ObjectsToPython.svg'
+
+import os
+import re
+
+import FreeCAD as app
+import FreeCADGui as gui
+import Part
+from FreeCAD import Vector, Placement
+
+
+def exportObjectsToPython(doc=None, create_doc_in_result_script=False):
+    if doc is None:
+        doc = app.activeDocument()
+
+    add_script_line('from FreeCAD import Vector, Placement, Rotation')
+    add_script_line('import Sketcher')
+    add_script_line('import Part')
+    add_script_line('import FreeCAD as app')
+    objectlist = []
+    skip_objects = [
+        ('App::Line', 'X_Axis'),
+        ('App::Line', 'Y_Axis'),
+        ('App::Line', 'Z_Axis'),
+        ('App::Plane', 'XY_Plane'),
+        ('App::Plane', 'XZ_Plane'),
+        ('App::Plane', 'YZ_Plane'),
+        ('App::Origin', 'Origin'),
+    ]
+
+    selection = gui.Selection.getSelection()
+    if not selection:
+        selection = doc.Objects
+    else:
+        expandSelection(selection)
+
+    for obj in doc.Objects:
+        objectlist.append(doc.getObject(obj.Name))
+
+    for obj in selection:
+        if obj.TypeId == 'Sketcher::SketchObject':
+            add_script_line('')
+            add_script_line(f'def createSketch_{varname(obj)}(doc):')
+            addObject(doc, obj, objectlist)
+            add_body_line('return ' + varname(obj))
+
+    add_script_line('')
+    add_script_line('')
+
+    doc_name_in_script = 'GenCAD'
+    for obj in doc.Objects:
+        if obj.TypeId == 'PartDesign::Body' or obj.TypeId == 'Part::Feature':
+            doc_name_in_script = obj.Name
+            break
+    add_script_line(f'def make_{doc_name_in_script}():')
+    if not selection:
+        add_body_line(f"doc = app.newDocument('{doc.Name}')")
+    else:
+        if create_doc_in_result_script:
+            add_body_line(f"doc = app.newDocument('{doc_name_in_script}')")
+            add_body_line(f"app.setActiveDocument(doc.Name)")
+        else:
+            add_body_line('doc = app.activeDocument()')
+
+
+    # Collect Body objects, sketches, and features separately
+    body_objects = []
+    sketch_objects = []
+    feature_objects = []
+    
+    for obj in selection:
+        if (obj.TypeId, obj.Label) not in skip_objects:
+            if obj.TypeId == 'PartDesign::Body':
+                body_objects.append(obj)
+            elif obj.TypeId == 'Sketcher::SketchObject':
+                sketch_objects.append(obj)
+            else:
+                feature_objects.append(obj)
+    
+    sketch_objects.reverse()
+    feature_objects.reverse()
+    
+    # Create Body objects first
+    for obj in body_objects:
+        add_script_line('')
+        addObject(doc, obj, objectlist, current_body=varname(obj))
+    
+    # Create Sketches after Bodies
+    current_body = varname(body_objects[0]) if body_objects else None
+    for obj in sketch_objects:
+        add_script_line('')
+        add_body_line(f'{varname(obj)} = createSketch_{varname(obj)}(doc)')
+        # Find which body this sketch belongs to by looking at features that use it
+        sketch_body = None
+        for in_obj in obj.InList:
+            if hasattr(in_obj, '_Body') and in_obj._Body:
+                sketch_body = varname(in_obj._Body)
+                break
+        if sketch_body:
+            current_body = sketch_body
+        if current_body:
+            add_body_line(f'{current_body}.addObject({varname(obj)})')
+        add_body_line('doc.recompute()')
+    
+    # Create Features (pads, pockets, etc.)
+    current_body = varname(body_objects[0]) if body_objects else None
+    for obj in feature_objects:
+        add_script_line('')
+        # Determine which body this feature belongs to
+        if hasattr(obj, '_Body') and obj._Body:
+            current_body = varname(obj._Body)
+        addObject(doc, obj, objectlist, current_body=current_body)
+        add_body_line('doc.recompute()')
+    
+    # Set Body properties at the end
+    for obj in body_objects:
+        add_script_line('')
+        add_body_line(f'{varname(obj)}_Group = [{", ".join([varname(g) for g in obj.Group])}]')
+        add_body_line(f'{varname(obj)}.Group = {varname(obj)}_Group')
+        if obj.Tip:
+            add_body_line(f'{varname(obj)}.Tip = {varname(obj.Tip)}')
+        if obj.Placement:
+            add_body_line(f'{varname(obj)}.Placement = Placement(Vector({obj.Placement.Base.x}, {obj.Placement.Base.y}, {obj.Placement.Base.z}), Rotation({obj.Placement.Rotation.Q[0]}, {obj.Placement.Rotation.Q[1]}, {obj.Placement.Rotation.Q[2]}, {obj.Placement.Rotation.Q[3]}))')
+
+
+    add_body_line('')
+    add_body_line('doc.recompute()')
+    add_script_line('')
+    add_script_line('')
+    add_script_line(f'make_{doc_name_in_script}()')
+
+
+def varname(obj):
+    forbidden = [' ', '.', ',', '%', '+', '-', '*',
+                 '/', '(', ')', '[', ']', '=', '"', "'"]
+    l = obj.Label
+    for f in forbidden:
+        l = l.replace(f, '_')
+
+    if l[0].isdigit():
+        l = '_' + l
+    return l
+
+
+def add_script_line(line, indent=0):
+    spaces = ' ' * 4 * indent
+    dialog.form.textEdit.append(spaces + line)
+
+
+def add_body_line(line, indent=1):
+    add_script_line(line, indent)
+
+
+def expandSelection(selection):
+    addthis = []
+    for obj in selection:
+        if hasattr(obj, 'Group'):
+            addthis += obj.Group
+        if hasattr(obj, 'Source'):
+            addthis.append(obj.Source)
+        if hasattr(obj, 'Links'):
+            addthis += obj.Links
+
+    addcount = 0
+    for a in addthis:
+        if ((a not in selection)
+                and hasattr(obj, 'Name')
+                and hasattr(obj, 'TypeId')):
+            selection.insert(0, a)
+            addcount = addcount + 1
+
+    if addcount > 0:
+        expandSelection(selection)
+
+
+def addObject(doc, obj, objectlist, current_body=None):
+    objname = varname(obj)
+    add_body_line(f"{objname} = doc.addObject('{obj.TypeId}', '{objname}')")
+    # Add feature to body group immediately after creation
+    if current_body and obj.TypeId not in ['Sketcher::SketchObject', 'PartDesign::Body']:
+        add_body_line(f'{current_body}.addObject({objname})')
+    defaultobj = doc.addObject(obj.TypeId, obj.Name + 'Default')
+    addProperties(obj, objname, defaultobj, objectlist, current_body=current_body)
+    addProperties(obj.ViewObject, objname + '.ViewObject',
+                  defaultobj.ViewObject, [])
+    doc.removeObject(obj.Name + 'Default')
+
+def addProperties(obj, objname, refobj, objectlist, current_body=None):
+    skipProperties = ['Label', 'Shape', 'Proxy',
+                      'AddSubShape', 'FullyConstrained', 'VisualLayerList',
+                     'InternalShape', 'ShapeMaterial', 'ShapeAppearance', 'MaterialName',
+                     'SuppressedShape']
+
+    skipObjProp = [
+        ('Sketcher::SketchObject', 'Geometry'),
+        ('Sketcher::SketchObject', 'Constraints'),
+        ('PartDesign::Body', 'Origin'),
+        ('PartDesign::Body', 'Tip'),
+        ('PartDesign::Body', 'Group'),
+        ('PartDesign::Body', 'Placement'),
+    ]
+
+    # Cf. https://github.com/FreeCAD/FreeCAD/blob/278ce803907ef72548d7ac761613038ac435c481/src/App/Property.h#L60
+    statuslist = [
+            'Immutable', 1,
+            'ReadOnly', 2,
+            'PropReadOnly', 24,
+            'PropOutput', 27,
+    ]
+
+    def propIsReadonly(obj, propname):
+        statusnums = obj.getPropertyStatus(propname)
+        for status in statuslist:
+            if status in statusnums:
+                return True
+        return False
+
+    if obj.TypeId == 'Spreadsheet::Sheet':
+        addSpreadsheet(obj, objname)
+        return
+
+    if obj.TypeId == 'Sketcher::SketchObject':
+        addSketch(obj, objname)
+
+    for propname in obj.PropertiesList:
+        if (propname not in skipProperties)\
+            and ((obj.TypeId, propname) not in skipObjProp)\
+            and not propIsReadonly(obj, propname):
+            prop = obj.getPropertyByName(propname)
+            val = objectToText(prop, objectlist)
+
+            try:
+                refprop = refobj.getPropertyByName(propname)
+                defaultval = objectToText(refprop, objectlist)
+            except:
+                defaultval = None
+
+            if propname == 'Support':
+                val = val.replace('XY_Plane', 'doc.XY_Plane')
+                val = val.replace('XZ_Plane', 'doc.XZ_Plane')
+                val = val.replace('YZ_Plane', 'doc.YZ_Plane')
+
+            if propname == 'AttachmentSupport':               
+                def getSupportPropStr(prop):
+                    objs = []
+                    for obj in prop:
+                        try:
+                            if isinstance(obj, (list, tuple)) and len(obj) > 0:
+                                objs.append(f'(doc.getObject("{obj[0].Name}"), {obj[1]})')
+                            else:
+                                objs.append(f'({obj}, "")')
+                        except Exception:
+                            print(f'{obj} - object cannot be converted.')
+                    return '[' + ', '.join(objs) + ']'
+
+                val = getSupportPropStr(prop)
+                
+            if propname == 'Axis' and current_body:
+                # Convert axis reference by finding the correct axis from OriginFeatures list
+                val = val.replace('X-axis', f"next(f for f in {current_body}.Origin.OriginFeatures if f.TypeId == 'App::Line' and 'X_' in f.Role)")
+                val = val.replace('Y-axis', f"next(f for f in {current_body}.Origin.OriginFeatures if f.TypeId == 'App::Line' and 'Y_' in f.Role)")
+                val = val.replace('Z-axis', f"next(f for f in {current_body}.Origin.OriginFeatures if f.TypeId == 'App::Line' and 'Z_' in f.Role)")
+
+            if propname == 'ExpressionEngine':
+                for expression in prop:
+                    add_body_line(objname + '.setExpression' +
+                                  str(expression).replace('<', '').replace('>', ''))
+
+            elif propname == '_Body':
+                add_body_line(f'{val}_Group.append({objname})')
+
+            elif (obj.TypeId, propname) == ('PartDesign::Body', 'Group'):
+
+                groupObjectsNames = f"{', '.join([groupObj.Name for groupObj in obj.Group])}"
+                add_body_line(f'{objname}_Group = [{groupObjectsNames}]')
+
+            elif (obj.TypeId, propname) == ('App::Part', 'Group'):
+                proplist = []
+                for pn in prop:
+                    proplist.append(varname(pn))
+
+                add_body_line(objname + '.Group = ' + str(proplist))
+
+            elif objectToText(prop, objectlist) is not None:
+                if val != defaultval:
+                    add_body_line(f'{objname}.{propname} = {val}')
+
+
+def objectToText(obj, objectlist=None):
+    if objectlist is None:
+        objectlist = []
+    if obj in objectlist:
+        return obj.Label
+
+    # how can I test if type(obj) is Base.Quantity ?
+    if hasattr(obj, 'Value') and hasattr(obj, 'Unit'):
+        return str(obj.Value)
+
+    if isinstance(obj, str):
+        return f"'{obj}'"
+
+    if isinstance(obj, bool):
+        return 'True' if obj else 'False'
+
+    if isinstance(obj, int):
+        return str(obj)
+
+    if isinstance(obj, float):
+        return floatstr(obj)
+
+    if isinstance(obj, Placement):
+        return f'Placement({objectToText(obj.Base)}, {objectToText(obj.Rotation)})'
+
+    if isinstance(obj, Part.Point):
+        return f'Part.Point(Vector({floatstr(obj.X)}, {floatstr(obj.Y)}, {floatstr(obj.Z)}))'
+
+    if isinstance(obj, Part.LineSegment):
+        return f'Part.LineSegment({obj.StartPoint}, {obj.EndPoint})'
+
+    if isinstance(obj, Part.Circle):
+        return f'Part.Circle({vecstr(obj.Center)}, {obj.Axis}, {floatstr(obj.Radius)})'
+
+    if isinstance(obj, Part.ArcOfCircle):
+        return f'Part.ArcOfCircle({objectToText(obj.Circle)}, {obj.FirstParameter}, {obj.LastParameter})'
+
+    if isinstance(obj, Part.Ellipse):
+        return f'Part.Ellipse({vecstr(obj.Center)}, {obj.MajorRadius}, {obj.MinorRadius})'
+
+    if isinstance(obj, Part.BSplineCurve):
+        poles = ''
+        komma = False
+        for p in obj.getPoles():
+            if komma:
+                poles += ', '
+            poles += vecstr(p)
+            komma = True
+
+        return f'Part.BSplineCurve([{poles}])'
+
+    if isinstance(obj, Part.Parabola):
+        return f'Part.Parabola({vecstr(obj.Focus)}, {vecstr(obj.Location)}, {vecstr(obj.Axis)})'
+
+    if isinstance(obj, Part.Hyperbola):
+        return f'Part.Hyperbola({vecstr(obj.Center)}, {obj.MajorRadius}, {obj.MinorRadius})'
+
+    if isinstance(obj, Part.ArcOfEllipse):
+        return f'Part.ArcOfEllipse({objectToText(obj.Ellipse)}, {obj.FirstParameter}, {obj.LastParameter})'
+
+    if isinstance(obj, Part.ArcOfParabola):
+        return f'Part.ArcOfParabola({objectToText(obj.Parabola)}, {obj.FirstParameter}, {obj.LastParameter})'
+
+    if isinstance(obj, Part.ArcOfHyperbola):
+        return f'Part.ArcOfHyperbola({objectToText(obj.Hyperbola)}, {obj.FirstParameter}, {obj.LastParameter})'
+
+    if isinstance(obj, Vector):
+        return vecstr(obj)
+
+    liststart = ''
+    if isinstance(obj, list):
+        liststart = '['
+        listend = ']'
+
+    if isinstance(obj, tuple):
+        liststart = '('
+        listend = ')'
+
+    if liststart != '':
+        sline = liststart
+        comma = False
+        for listele in obj:
+            if comma:
+                sline = sline + ', '
+            else:
+                comma = True
+
+            val = objectToText(listele, objectlist)
+            if val is not None:
+                sline = sline + val
+
+        sline += listend
+        return sline
+
+    stringobj = str(obj)
+    # remove "property=<shape object" literal assignment from result code
+    if stringobj.startswith('<'):
+        return None
+    return stringobj
+
+
+def addSketch(obj, objname):
+    prop = obj.getPropertyByName('Geometry')
+    gflist = obj.GeometryFacadeList
+
+    n = 0
+    exposing = 0
+    exposed = []
+    for geo in prop:
+        objstr = objectToText(geo)
+
+        if exposing > 0:
+            exposed.append(n)
+            exposing = exposing - 1
+        else:
+            add_body_line(f'geo{n} = {objname}.addGeometry({objstr})')
+            if gflist[n].Construction:
+                add_body_line(f'{objname}.toggleConstruction(geo{n})')
+
+            if isinstance(geo, Part.BSplineCurve):
+                poles = len(geo.getPoles())
+                exposing = poles - 2
+                if exposing < 2:
+                    exposing = 2
+
+            if isinstance(geo, Part.ArcOfParabola):
+                exposing = 2
+
+            if isinstance(geo, Part.ArcOfHyperbola):
+                exposing = 3
+
+            if isinstance(geo, Part.ArcOfEllipse):
+                exposing = 4
+
+        n = n + 1
+
+    splinecount = 0
+    concount = 0
+    prop = obj.getPropertyByName('Constraints')
+    for con in obj.Constraints:
+        conargs = con.Value
+        contype = con.Type
+        if con.First < 0:
+            first = str(con.First)
+        else:
+            first = f'geo{con.First}'
+
+        if con.Second < 0:
+            sec = str(con.Second)
+        else:
+            sec = f'geo{con.Second}'
+
+        if con.Third < 0:
+            third = str(con.Third)
+        else:
+            third = f'geo{con.Third}'
+
+        if con.Type == 'Coincident':
+            conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}'
+        elif con.Type == 'PointOnObject':
+            conargs = f'{first}, {con.FirstPos}, {sec}'
+
+        elif con.Type == 'Vertical':
+            if sec[:3] == 'geo':
+                # Two points.
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}'
+            else:
+                # Line.
+                conargs = str(first)
+
+        elif con.Type == 'Horizontal':
+            if sec[:3] == 'geo':
+                # Two points.
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}'
+            else:
+                # Line.
+                conargs = str(first)
+        elif con.Type == 'Parallel':
+            conargs = f'{first}, {sec}'
+
+        elif con.Type == 'PerpendicularViaPoint':
+            conargs = f'{first}, {sec}, {third}, {con.ThirdPos}'
+        elif con.Type == 'Perpendicular':
+            if con.FirstPos == 0:
+                conargs = f'{first}, {sec}'
+            elif third[:3] == 'geo':
+                contype = 'PerpendicularViaPoint'  # compatiblity to FreeCAD 2.20
+                conargs = f'{first}, {sec}, {third}, {con.ThirdPos}'
+            elif con.SecondPos == 0:
+                conargs = f'{first}, {con.FirstPos}, {sec}'
+            else:
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}'
+
+        elif con.Type == 'TangentViaPoint':
+            conargs = f'{first}, {sec}, {third}, {con.ThirdPos}'
+        elif con.Type == 'Tangent':
+            if con.Second < 0:
+                conargs = f'{first}, {con.FirstPos}'
+            elif third[:3] == 'geo':
+                contype = 'TangentViaPoint'  # compatiblity to FreeCAD 2.20
+                conargs = f'{first}, {sec}, {third}, {con.ThirdPos}'
+            elif con.SecondPos == 0:
+                conargs = f'{first}, {con.FirstPos}, {sec}'
+            else:
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}'
+
+        elif con.Type == 'Equal':
+            conargs = f'{first}, {sec}'
+
+        elif con.Type == 'Symmetric':
+            conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}, {third}, {con.ThirdPos}'
+        elif con.Type == 'Block':
+            conargs = str(first)
+
+        elif con.Type == 'Distance':
+            if sec[:3] != 'geo':
+                conargs = f'{first}, {floatstr(con.Value)}'
+            elif con.FirstPos == 0:
+                conargs = f'{first}, {sec}, {floatstr(con.Value)}'
+            elif con.SecondPos == 0:
+                conargs = f'{first}, {con.FirstPos}, {sec}, {floatstr(con.Value)}'
+            else:
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}, {floatstr(con.Value)}'
+        elif con.Type == 'DistanceX' or con.Type == 'DistanceY':
+            if sec[:3] != 'geo':
+                conargs = f'{first}, {con.FirstPos}, {floatstr(con.Value)}'
+            else:
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}, {floatstr(con.Value)}'
+
+        elif con.Type == 'AngleViaPoint':
+            conargs = f'{first}, {sec}, {third}, {floatstr(con.Value)}'
+        elif con.Type == 'Angle':
+            if con.FirstPos == 0:
+                conargs = f'{first}, {sec}, {floatstr(con.Value)}'
+            elif third[:3] == 'geo':
+                contype = 'AngleViaPoint'  # compatiblity to FreeCAD 2.20
+                conargs = f'{first}, {sec}, {third}, {floatstr(con.Value)}'
+            else:
+                conargs = f'{first}, {con.FirstPos}, {sec}, {con.SecondPos}, {floatstr(con.Value)}'
+
+        elif con.Type == 'Weight' or con.Type == 'Radius' or con.Type == 'Diameter':
+            conargs = f'{first}, {floatstr(con.Value)}'
+            splinecount = 0
+
+        elif con.Type == 'InternalAlignment':
+            if con.Second > con.First:
+                contype = 'InternalAlignment:Sketcher::BSplineControlPoint'
+                conargs = f'{first}, {con.FirstPos}, {sec}, {splinecount}'
+                splineindex = con.Second
+                splinecount = splinecount + 1
+            else:
+                conargs = None
+
+        if conargs is not None:
+            add_body_line(
+                f"{objname}.addConstraint(Sketcher.Constraint('{contype}', {conargs}))")
+
+        if con.Name != "":
+            add_body_line(f"{objname}.renameConstraint({concount}, '{con.Name}')")
+
+        concount = concount + 1
+
+
+def addSpreadsheet(obj, objname):
+    for propname in obj.PropertiesList:
+        match = re.search('[A-Z]+[0-9]+', propname)
+        if match:
+            prop = obj.getPropertyByName(propname)
+            val = objectToText(prop)
+            add_body_line("{}.set('{}', {})".format(
+                objname, propname, val.replace("'", '')))
+            alias = obj.getAlias(propname)
+            if alias is not None:
+                add_body_line(f"{objname}.setAlias('{propname}', '{alias}')")
+
+    add_body_line('doc.recompute()')
+
+
+def floatstr(f):
+    # return '{:.2f}'.format(f)
+    return str(f)
+
+
+def vecstr(v):
+    return f'Vector({floatstr(v.x)}, {floatstr(v.y)}, {floatstr(v.z)})'
+
+
+class O2PDialog:
+    """Show a dialog for ObjectsToPython"""
+
+    def __init__(self):
+        macro_dir = app.getUserMacroDir(True)
+        self.ui_file = os.path.join(
+            macro_dir, 'ObjectsToPython/ObjectsToPython.ui')
+        self.form = gui.PySideUic.loadUi(self.ui_file)
+        self.form.pushButtonClose.pressed.connect(self.close_callback)
+        self.form.show()
+
+    def close_callback(self):
+        self.form.close()
+
+
+# dialog = O2PDialog()
+# exportObjectsToPython()

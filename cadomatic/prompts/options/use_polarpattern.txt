@@ -1,0 +1,16 @@
+Use PartDesign_PolarPattern (set Axis) if need place same object in radius on other primitive. 
+PartDesign_PolarPattern must be in same body where you add objects in radius. 
+Objects in PartDesign_PolarPattern must touch primitive (cylinder) on which they lie, because result must be one solid body.
+Dont use PolarPattern for wheels placement.
+Example:
+>>> ### Begin command PartDesign_PolarPattern
+>>> App.ActiveDocument.getObject('Body').newObject('PartDesign::PolarPattern','PolarPattern')
+>>> App.ActiveDocument.recompute()
+>>> App.ActiveDocument.getObject('PolarPattern').Originals = [App.ActiveDocument.getObject('obj_name'),]
+>>> App.ActiveDocument.getObject('PolarPattern').Axis = (App.ActiveDocument.getObject('OccurrenceSketch'), ['N_Axis']) # Must be N_Axis of sketch!
+>>> App.ActiveDocument.getObject('PolarPattern').Angle = 360
+>>> App.ActiveDocument.getObject('PolarPattern').Occurrences = number_of_objects
+>>> App.ActiveDocument.recompute()
+>>> ### End command PartDesign_PolarPattern
+
+DONT USE body.Origin.OriginFeatures[5]! It is not a Z_Axis.

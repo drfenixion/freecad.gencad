@@ -1,0 +1,635 @@
+Use Part workbench instead of PartDesign workbench!
+
+
+-Use the following functions to make simple solids:
+    1. makeBox(length,width,height,[pnt,dir]) #Description: Makes a box located at pnt with the dimensions (length,width,height). By default pnt is Vector(0,0,0) and dir is Vector(0,0,1)
+    2. makeCircle(radius,[pnt,dir,angle1,angle2]) #Description: Makes a circle with a given radius. By default pnt is Vector(0,0,0), dir is Vector(0,0,1), angle1 is 0 and angle2 is 360.
+    3. makeCone(radius1,radius2,height,[pnt,dir,angle]) #Description: Makes a cone with given radii and height. By default pnt is Vector(0,0,0), dir is Vector(0,0,1) and angle is 360
+    4. makeCylinder(radius,height,[pnt,dir,angle]) #Description: Makes a cylinder with a given radius and height. By default pnt is Vector(0,0,0),dir is Vector(0,0,1) and angle is 360
+    5. makeHelix(pitch,height,radius,[angle,lefthand,heightstyle]) #Description: Makes a helix shape with a given pitch, height and radius. Defaults to right-handed cylindrical helix. Non-zero angle parameter produces a conical helix. Lefthand True produces left handed helix. Heightstyle applies only to conical helices. Heightstyle False (default) will cause the height parameter to be interpreted as the length of the side of the underlying frustum. Heightstyle True will cause the height parameter to be interpreted as the vertical height of the helix. Pitch is "metric pitch" (advance/revolution). For conical helix, radius is the minor radius.
+    6. makeLine((x1,y1,z1),(x2,y2,z2)) #Description: Makes a line of two points
+    7. makeLoft(shapelist<profiles>,[boolean<solid>,boolean<ruled>]) #Description: Creates a loft shape using the list of profiles. Optionally make result a solid (vs surface/shell) or make result a ruled surface.
+    8. makePlane(length,width,[pnt,dir]) #Description: Makes a plane. By default pnt is Vector(0,0,0) and dir is Vector(0,0,1)
+    9. makePolygon(list) #Description: Makes a polygon of a list of Vectors
+    10. makeRevolution(Curve,[vmin,vmax,angle,pnt,dir]) #Description: Makes a revolved shape by rotating the curve or a portion of it around an axis given by (pnt,dir). By default vmin/vmax are set to bounds of the curve,angle is 360,pnt is Vector(0,0,0) and dir is Vector(0,0,1)
+    11. makeShell(list) #Description: Creates a shell out of a list of faces. Note: Resulting shell should be manifold. Non-manifold shells are not well supported.
+    12. makeSolid(Part.Shape) #Description: Creates a solid out of the shells inside a shape.
+    13. makeSphere(radius,[center_pnt, axis_dir, V_startAngle, V_endAngle, U_angle]) #Description: Makes a sphere (or partial sphere) with a given radius. By default center_pnt is Vector(0,0,0), axis_dir is Vector(0,0,1), V_startAngle is 0, V_endAngle is 90 and U_angle is 360
+    14. makeTorus(radius1,radius2,[pnt,dir,angle1,angle2,angle]) #Description: Makes a torus with a given radii and angles. By default pnt is Vector(0,0,0),dir is Vector(0,0,1),angle1 is 0,angle2 is 360 and angle is 360
+- use the fuse() function instead of Part.Union(). Use it only where necessary. Only when it is necessary to combine parts
+- When converting a Part.BSplineCurve to a wire, do not use .toWire() directly (it does not exist). Instead, convert the spline to an edge with .toShape() and wrap it inside Part.Wire([ ... ]).
+    Example:
+    wire = Part.Wire([bspline.toShape()]) 
+- To create ellipse profiles, do not use Part.makeEllipse(). Instead, create a Part.Ellipse(), set the MajorRadius and MinorRadius, then convert it to a wire:
+    ellipse = Part.Ellipse()  
+    ellipse.MajorRadius = width / 2  
+    ellipse.MinorRadius = height / 2  
+    wire = Part.Wire([ellipse.toShape()])
+- Sweeping Profiles Along Paths
+    For sweeping profiles along a path, use the makePipeShell() method on the path wire instead of a non-existent makeSweep(). Pass a list of profile wires, and control solid creation with parameters:
+    pipe_shape = path_wire.makePipeShell([profile1, profile2, profile3], makeSolid=True, isFrenet=True)  
+- Handling PipeShell Solid Creation Errors
+    If sweeping results in BRepOffsetAPI_MakePipeShell::MakeSolid errors, try creating the pipe shell without forcing a solid first (set makeSolid=False) to debug geometry issues:
+
+
+
+Example operations in case of Build tree requested:
+doc = FreeCAD.newDocument("FlangeDocument1")
+
+# Create base flange (30ro 10ri) - 30 radius outer, 10 radius inner
+flange_outer_radius = 30
+flange_inner_radius = 10
+flange_thickness = 10  # Assume thickness based on context
+
+# Create outer cylinder object
+outer_cylinder = doc.addObject("Part::Cylinder", "OuterCylinder")
+outer_cylinder.Radius = flange_outer_radius
+outer_cylinder.Height = flange_thickness
+
+# Create inner cylinder object (for hole)
+inner_cylinder = doc.addObject("Part::Cylinder", "InnerCylinder")
+inner_cylinder.Radius = flange_inner_radius
+inner_cylinder.Height = flange_thickness
+
+# Position inner cylinder at the same location
+inner_cylinder.Placement.Base = outer_cylinder.Placement.Base
+
+# Create boolean cut operation
+flange_cut = doc.addObject("Part::Cut", "FlangeCut")
+flange_cut.Base = outer_cylinder
+flange_cut.Tool = inner_cylinder
+
+# Optionally hide intermediate objects
+outer_cylinder.ViewObject.Visibility = False
+inner_cylinder.ViewObject.Visibility = False
+
+# Recompute document
+doc.recompute()
+
+
+
+- Correct Usage of fuse() in FreeCAD-
+    When performing a union (boolean fuse) of multiple shapes in FreeCAD, always use the iterative .fuse() method on Part objects instead of Part.Union().
+
+    Correct Approach:
+
+    fan_final_shape = all_parts_to_fuse[0]  # Start with the first shape  
+    for shape in all_parts_to_fuse[1:]:     # Iterate over remaining shapes  
+        fan_final_shape = fan_final_shape.fuse(shape)  # Fuse one by one  
+    Avoid:
+
+    fan_final_shape = Part.Union(all_parts_to_fuse)  # Incorrect method  
+
+
+- When applying a Placement to a FreeCAD shape (like a Part.Solid or Part.Shape), do not use .Placed(placement) — this method does not exist.
+Instead, use .copy() and assign the Placement directly, like this:
+
+    shape = Part.makeBox(10, 10, 10)
+    placed_shape = shape.copy()
+    placed_shape.Placement = Placement(Vector(x, y, z), Rotation(Vector(0,0,1), angle))
+    Always use .copy() to avoid modifying the original shape directly, and set Placement as an attribute on the copied shape.
+
+
+- Whenever you are asked to make a fastner including nut bolt and screw, you need to make a similar code as the one given below. you have the rag in your context window from where you must write the necessary function of calculating dimensions from screw_maker.py. You need to then make a dummy function for the variables of the screw as asked-
+
+    from screw_maker import *
+
+    try:
+        import FreeCADGui
+        GUI_AVAILABLE = True
+    except ImportError:
+        GUI_AVAILABLE = False
+
+
+
+    def makeAllMetalFlangedLockNut(self, fa):
+        """Creates a distorted thread lock nut with a flange
+        Supported types:
+        - ISO 7044 all metal lock nuts with flange
+        - ISO 12126 all metal flanged lock nuts with fine pitch thread
+        """
+        dia = self.getDia(fa.calc_diam, True)
+        if fa.baseType in ["ISO7044", "ISO12126"]:
+            P, c, _, _, dc, _, _, h, _, m_min, _, s, _, _ = fa.dimTable
+            m_w = m_min
+        else:
+            raise NotImplementedError(f"Unknown fastener type: {fa.Type}")
+        # main hexagonal body of the nut
+        shape = self.makeHexPrism(s, h)
+        # flange of the hex
+        fm = FSFaceMaker()
+        fm.AddPoint((1.05 * dia + s) / 4, 0.0)
+        fm.AddPoint((dc + sqrt3 * c) / 2, 0.0)
+        fm.AddPoint((dc - c) / 2, 0.0)
+        fm.AddArc2(0, c / 2, 150)
+        fm.AddPoint(
+            (1.05 * dia + s) / 4,
+            sqrt3
+            / 3
+            * ((dc - c) / 2 + c / (4 - 2 * sqrt3) - (1.05 * dia + s) / 4),
+        )
+        flange = self.RevolveZ(fm.GetFace())
+        shape = shape.fuse(flange).removeSplitter()
+        # internal bore
+        fm.Reset()
+        id = self.GetInnerThreadMinDiameter(dia, P, 0.0)
+        bore_cham_ht = (dia * 1.05 - id) / 2 * tan15
+        fm.AddPoint(0.0, 0.0)
+        fm.AddPoint(dia * 1.05 / 2, 0.0)
+        fm.AddPoint(id / 2, bore_cham_ht)
+        fm.AddPoint(id / 2, h - bore_cham_ht)
+        fm.AddPoint(dia * 1.05 / 2, h)
+        fm.AddPoint(0.0, h)
+        bore_cutter = self.RevolveZ(fm.GetFace())
+        shape = shape.cut(bore_cutter)
+        # outer chamfer on the hex
+        fm.Reset()
+        fm.AddPoint((s / sqrt3 + 1.05 * dia / 2) / 2, h)
+        fm.AddPoint(s / sqrt3, h)
+        fm.AddPoint(s / sqrt3, m_w)
+        top_cham_cutter = self.RevolveZ(fm.GetFace())
+        shape = shape.cut(top_cham_cutter)
+        # add modelled threads if needed
+        if fa.Thread:
+            thread_cutter = self.CreateInnerThreadCutter(dia, P, h + P)
+            shape = shape.cut(thread_cutter)
+        return shape
+
+
+
+    if __name__ == "__main__":
+        import sys
+        sys.path.append(r"C:\Users\yasin\Desktop\Code\text2cad_trial")
+        import screw_maker as sm
+        import FreeCAD as App, Part
+
+        s = sm.Screw()
+
+        class DummyFA:
+            baseType = "ISO7044"
+            Type = "ISO7044"
+            calc_diam = "M10"
+            Diameter = "M10"
+            Thread = True
+            LeftHanded = False
+            dimTable = [1.5, 0.5, 0, 0, 17.5, 0, 0, 8.0, 0, 7.5, 0, 15, 0, 0]
+
+        fa = DummyFA()
+        shape = makeAllMetalFlangedLockNut(s, fa)
+
+        doc = App.newDocument("AutoNut")
+        obj = doc.addObject("Part::Feature", "AutoFlangedNut")
+        obj.Shape = shape
+        doc.recompute()
+
+        print("Flanged lock nut generated successfully.")
+
+    if GUI_AVAILABLE:
+        # FreeCADGui.showMainWindow()
+        FreeCADGui.activeDocument().activeView().viewAxometric()
+        FreeCADGui.SendMsgToActiveView("ViewFit")
+
+
+- when asked to "make a flange of OD 100mm, bore size as 50mm, thickness 7.5mm. the height of the middle hollow neck must be 15mm. make 6 m12 holes at PCD 75mm", make the following code:
+        import FreeCAD as App
+        import FreeCADGui as Gui
+        from FreeCAD import Vector
+        import math
+
+
+        def createFlangeAssembly():
+            doc = App.newDocument("Flange")
+
+            # === Parameters ===
+            FLANGE_OUTER_DIAMETER = 100.0
+            FLANGE_THICKNESS = 7.5
+            BORE_INNER_DIAMETER = 50.0
+            NECK_HEIGHT = 15.0
+            NECK_OUTER_DIAMETER = 60.0
+            NUM_BOLT_HOLES = 6
+            BOLT_HOLE_DIAMETER = 12.0
+            PCD = 75.0
+
+            total_height = FLANGE_THICKNESS + NECK_HEIGHT
+
+            # === 1. Create flange base ===
+            flange = doc.addObject("Part::Cylinder", "Flange")
+            flange.Radius = FLANGE_OUTER_DIAMETER / 2
+            flange.Height = FLANGE_THICKNESS
+
+            # === 2. Cut central bore from flange ===
+            bore = doc.addObject("Part::Cylinder", "CentralBore")
+            bore.Radius = BORE_INNER_DIAMETER / 2
+            bore.Height = FLANGE_THICKNESS
+            bore_cut = doc.addObject("Part::Cut", "FlangeWithBore")
+            bore_cut.Base = flange
+            bore_cut.Tool = bore
+
+            # === 3. Create neck ===
+            neck_outer = doc.addObject("Part::Cylinder", "NeckOuter")
+            neck_outer.Radius = NECK_OUTER_DIAMETER / 2
+            neck_outer.Height = NECK_HEIGHT
+            neck_outer.Placement.Base = Vector(0, 0, FLANGE_THICKNESS)
+
+            neck_inner = doc.addObject("Part::Cylinder", "NeckInner")
+            neck_inner.Radius = BORE_INNER_DIAMETER / 2
+            neck_inner.Height = NECK_HEIGHT
+            neck_inner.Placement.Base = Vector(0, 0, FLANGE_THICKNESS)
+
+            neck_hollow = doc.addObject("Part::Cut", "HollowNeck")
+            neck_hollow.Base = neck_outer
+            neck_hollow.Tool = neck_inner
+
+            # === 4. Fuse flange (with central hole) and neck ===
+            fused = doc.addObject("Part::Fuse", "FlangeAndNeck")
+            fused.Base = bore_cut
+            fused.Tool = neck_hollow
+
+            # === 5. Cut bolt holes sequentially ===
+            current_shape = fused
+            bolt_radius = BOLT_HOLE_DIAMETER / 2
+            bolt_circle_radius = PCD / 2
+
+            for i in range(NUM_BOLT_HOLES):
+                angle_deg = 360 * i / NUM_BOLT_HOLES
+                angle_rad = math.radians(angle_deg)
+                x = bolt_circle_radius * math.cos(angle_rad)
+                y = bolt_circle_radius * math.sin(angle_rad)
+
+                hole = doc.addObject("Part::Cylinder", f"BoltHole_{i+1:02d}")
+                hole.Radius = bolt_radius
+                hole.Height = total_height
+                hole.Placement.Base = Vector(x, y, 0)
+
+                cut = doc.addObject("Part::Cut", f"Cut_Bolt_{i+1:02d}")
+                cut.Base = current_shape
+                cut.Tool = hole
+                current_shape = cut  # update for next iteration
+
+            # === 6. Final result ===
+        
+
+            # Recompute and fit view
+            doc.recompute()
+            Gui.activeDocument().activeView().viewAxometric()
+            Gui.SendMsgToActiveView("ViewFit")
+
+            return doc
+
+        if __name__ == "__main__":
+            createFlangeAssembly()
+
+use this template whenever asked to make a flange
+
+- Use material only when specified by user. An example of using material is-
+                
+        view_obj = final_obj.ViewObject
+        view_obj.ShapeColor = (0.8, 0.8, 0.85)      # Light grey-blue tone
+        view_obj.DiffuseColor = [(0.8, 0.8, 0.85)]  # Consistent color across faces
+        view_obj.Transparency = 0  
+
+        material_obj = doc.addObject("App::MaterialObject", "Material")
+        material_obj.Material = {
+            'Name': 'Stainless steel',
+            'Density': '8000 kg/m^3',
+            'YoungsModulus': '200000 MPa',
+            'PoissonRatio': '0.3'
+        }
+        material_obj.Label = "StainlessSteelMaterial"
+
+This is a good example for a teapot. Whenever asked to generate a teapot, make something similar:
+    import FreeCAD as App
+    import FreeCADGui as Gui
+    from FreeCAD import Vector, Placement, Rotation
+    import Part
+
+    # Teapot dimensions
+    BODY_BOTTOM_RADIUS = 50.0
+    BODY_MAX_RADIUS = 80.0
+    BODY_HEIGHT = 100.0
+    LID_OPENING_RADIUS = 35.0
+
+    # Spout parameters
+    SPOUT_ATTACH_HEIGHT = BODY_HEIGHT * 0.5         # 50.0
+    SPOUT_OFFSET_Y = BODY_MAX_RADIUS * 0.7          # 56.0
+    SPOUT_LENGTH_HORIZONTAL = 60.0
+    SPOUT_LENGTH_VERTICAL = 30.0
+    SPOUT_RADIUS = 7.0
+
+    # Handle parameters
+    HANDLE_ATTACH_TOP_HEIGHT = BODY_HEIGHT * 0.7    # 70.0
+    HANDLE_ATTACH_BOTTOM_HEIGHT = BODY_HEIGHT * 0.3 # 30.0
+    HANDLE_OFFSET_Y = -BODY_MAX_RADIUS * 0.7        # -56.0
+    HANDLE_RADIUS = 6.0
+
+    def createTeapot():
+        doc = App.newDocument("Teapot")
+
+        # --- 1. Body ---
+        body_profile_pts = [
+            Vector(BODY_BOTTOM_RADIUS, 0, 0),
+            Vector(BODY_MAX_RADIUS, 0, BODY_HEIGHT * 0.4),
+            Vector(BODY_MAX_RADIUS * 0.8, 0, BODY_HEIGHT * 0.7),
+            Vector(LID_OPENING_RADIUS, 0, BODY_HEIGHT)
+        ]
+        body_spline = Part.BSplineCurve(body_profile_pts)
+        body_edge = body_spline.toShape()
+        line1 = Part.LineSegment(Vector(LID_OPENING_RADIUS, 0, BODY_HEIGHT), Vector(0, 0, BODY_HEIGHT)).toShape()
+        line2 = Part.LineSegment(Vector(0, 0, BODY_HEIGHT), Vector(0, 0, 0)).toShape()
+        line3 = Part.LineSegment(Vector(0, 0, 0), Vector(BODY_BOTTOM_RADIUS, 0, 0)).toShape()
+        wire = Part.Wire([body_edge, line1, line2, line3])
+        face = Part.Face(wire)
+        body_solid = face.revolve(Vector(0, 0, 0), Vector(0, 0, 1), 360)
+
+        obj_body = doc.addObject("Part::Feature", "Body")
+        obj_body.Shape = body_solid
+        obj_body.ViewObject.ShapeColor = (0.9, 0.7, 0.7)
+
+        # --- 2. Lid ---
+        lid_profile_pts = [
+            Vector(36.0, 0, 0),
+            Vector(36.0, 0, 3.0),
+            Vector(35.0, 0, 3.0 + 20.0 * 0.2),
+            Vector(17.5, 0, 3.0 + 20.0 * 0.7),
+            Vector(10.0, 0, 3.0 + 20.0),
+            Vector(5.0, 0, 3.0 + 20.0 + 15.0 * 0.8),
+            Vector(0, 0, 3.0 + 20.0 + 15.0)
+        ]
+        lid_spline = Part.BSplineCurve(lid_profile_pts)
+        lid_edge = lid_spline.toShape()
+        line1 = Part.LineSegment(Vector(0, 0, 3.0 + 20.0 + 15.0), Vector(0, 0, 0)).toShape()
+        line2 = Part.LineSegment(Vector(0, 0, 0), Vector(36.0, 0, 0)).toShape()
+        wire_lid = Part.Wire([lid_edge, line1, line2])
+        face_lid = Part.Face(wire_lid)
+        lid_solid = face_lid.revolve(Vector(0, 0, 0), Vector(0, 0, 1), 360)
+
+        obj_lid = doc.addObject("Part::Feature", "Lid")
+        obj_lid.Shape = lid_solid
+        obj_lid.Placement = Placement(Vector(0, 0, BODY_HEIGHT), Rotation())
+        obj_lid.ViewObject.ShapeColor = (0.9, 0.7, 0.7)
+
+        # --- 3. Spout (Precomputed final positions) ---
+        spout_path_pts = [
+            Vector(0, -121, 66),  # Original: (0, -56, 50) -> transformed
+            Vector(0, -91, 51),   # Original: (0, -26, 65) -> transformed
+            Vector(0, -61, 36)    # Original: (0, 4, 80) -> transformed
+        ]
+
+        spout_curve = Part.BSplineCurve(spout_path_pts)
+        spout_wire = Part.Wire(spout_curve.toShape())
+
+        tangent_spout = spout_curve.tangent(spout_curve.FirstParameter)[0]
+        tangent_spout.normalize()
+
+        spout_circle = Part.Circle()
+        spout_circle.Center = spout_path_pts[0]
+        spout_circle.Axis = tangent_spout
+        spout_circle.Radius = SPOUT_RADIUS
+        spout_profile = Part.Wire(spout_circle.toShape())
+
+        spout_solid = spout_wire.makePipe(spout_profile)
+        obj_spout = doc.addObject("Part::Feature", "Spout")
+        obj_spout.Shape = spout_solid
+        obj_spout.ViewObject.ShapeColor = (0.9, 0.7, 0.7)
+
+        # --- 4. Handle (Precomputed final positions) ---
+        handle_path_pts = [
+            Vector(0, 56, 31),   # Original: (0, 56, 70) -> transformed
+            Vector(0, 78, 43),   # Original: (0, 78, 58) -> transformed
+            Vector(0, 78, 79),   # Original: (0, 78, 22) -> transformed
+            Vector(0, 56, 71)    # Original: (0, 56, 30) -> transformed
+        ]
+
+        handle_curve = Part.BSplineCurve(handle_path_pts)
+        handle_wire = Part.Wire(handle_curve.toShape())
+
+        tangent_handle = handle_curve.tangent(handle_curve.FirstParameter)[0]
+        tangent_handle.normalize()
+
+        handle_circle = Part.Circle()
+        handle_circle.Center = handle_path_pts[0]
+        handle_circle.Axis = tangent_handle
+        handle_circle.Radius = HANDLE_RADIUS
+        handle_profile = Part.Wire(handle_circle.toShape())
+
+        handle_solid = handle_wire.makePipe(handle_profile)
+        obj_handle = doc.addObject("Part::Feature", "Handle")
+        obj_handle.Shape = handle_solid
+        obj_handle.ViewObject.ShapeColor = (0.9, 0.7, 0.7)
+
+        # --- 5. Fuse all parts ---
+        fused = obj_body.Shape.fuse(obj_lid.Shape)
+        fused = fused.fuse(obj_spout.Shape)
+        fused = fused.fuse(obj_handle.Shape)
+
+        obj_final = doc.addObject("Part::Feature", "Teapot_Complete")
+        obj_final.Shape = fused
+        obj_final.ViewObject.ShapeColor = (0.9, 0.6, 0.6)
+
+        # Hide individual parts for clarity
+        obj_body.ViewObject.Visibility = False
+        obj_lid.ViewObject.Visibility = False
+        obj_spout.ViewObject.Visibility = False
+        obj_handle.ViewObject.Visibility = False
+
+        doc.recompute()
+
+        Gui.activeDocument().activeView().viewAxometric()
+        Gui.SendMsgToActiveView("ViewFit")
+
+        return doc
+
+    if __name__ == "__main__":
+        createTeapot()
+
+- This is a good example for a herringbone gear. If asked to make a herringbone gear, generate similar:
+    #Herringbone gear
+
+    import FreeCAD as App
+    import FreeCADGui as Gui
+    import Part
+    import math
+    from FreeCAD import Vector, Placement, Rotation
+
+    def createHerringboneGear(
+        num_teeth=20,
+        module=5.0,
+        pressure_angle_deg=20.0,
+        helix_angle_deg=25.0,
+        face_width=50.0,
+        central_bore_diameter=20.0,
+        num_loft_sections=50,
+        addendum_factor=1.0,
+        dedendum_factor=1.25,
+        tooth_radial_offset=1.5  # Teeth pushed radially outward
+    ):
+        doc = App.newDocument("HerringboneGear")
+
+        pressure_angle_rad = math.radians(pressure_angle_deg)
+        helix_angle_rad = math.radians(helix_angle_deg)
+
+        pitch_diameter = module * num_teeth
+        pitch_radius = pitch_diameter / 2
+        addendum = addendum_factor * module
+        dedendum = dedendum_factor * module
+        root_radius = pitch_radius - dedendum + tooth_radial_offset
+        outer_radius = pitch_radius + addendum + tooth_radial_offset
+
+        gear_total_height = face_width
+        half_gear_height = gear_total_height / 2
+
+        total_angular_twist_rad = (face_width * math.tan(helix_angle_rad)) / pitch_radius
+
+        gear_hub = doc.addObject("Part::Cylinder", "GearHub")
+        gear_hub.Radius = outer_radius - tooth_radial_offset
+        gear_hub.Height = gear_total_height
+        gear_hub.Placement.Base = Vector(0, 0, 0)
+
+        if central_bore_diameter > 0:
+            bore_radius = central_bore_diameter / 2
+            central_bore = doc.addObject("Part::Cylinder", "CentralBore")
+            central_bore.Radius = bore_radius
+            central_bore.Height = gear_total_height
+            central_bore.Placement.Base = Vector(0, 0, 0)
+
+            hub_base = doc.addObject("Part::Cut", "Hub_With_Bore")
+            hub_base.Base = gear_hub
+            hub_base.Tool = central_bore
+        else:
+            hub_base = gear_hub
+
+        angle_per_tooth = 360.0 / num_teeth
+
+        effective_half_angle_for_flank_base = (math.pi / num_teeth) / 2
+        effective_half_angle_for_flank_tip = effective_half_angle_for_flank_base * 0.7 
+
+        P_A = Vector(root_radius * math.sin(effective_half_angle_for_flank_base), root_radius * math.cos(effective_half_angle_for_flank_base), 0)
+        P_B = Vector(root_radius * math.sin(-effective_half_angle_for_flank_base), root_radius * math.cos(-effective_half_angle_for_flank_base), 0)
+
+        P_C = Vector(outer_radius * math.sin(effective_half_angle_for_flank_tip), outer_radius * math.cos(effective_half_angle_for_flank_tip), 0)
+        P_D = Vector(outer_radius * math.sin(-effective_half_angle_for_flank_tip), outer_radius * math.cos(-effective_half_angle_for_flank_tip), 0)
+
+        e_flank1 = Part.LineSegment(P_B, P_D).toShape()
+        e_flank2 = Part.LineSegment(P_A, P_C).toShape()
+
+        def offset_midpoint(p1, p2, offset=0.1):
+            mid = (p1 + p2).multiply(0.5)
+            vec = p2.sub(p1)
+            perp = Vector(-vec.y, vec.x, 0)
+            perp.normalize()
+            return mid.add(perp.multiply(offset))
+
+        tip_midpoint = offset_midpoint(P_D, P_C, 0.1)
+        e_tip_arc = Part.ArcOfCircle(P_D, tip_midpoint, P_C).toShape()
+
+        root_midpoint = offset_midpoint(P_A, P_B, 0.1)
+        e_root_arc = Part.ArcOfCircle(P_A, root_midpoint, P_B).toShape()
+
+        try:
+            tooth_profile_wire = Part.Wire([e_root_arc, e_flank1, e_tip_arc, e_flank2])
+        except Exception as e:
+            App.Console.PrintError(f"Error creating tooth profile wire: {e}. Using fallback wire.\n")
+            fallback_edges = [
+                Part.LineSegment(P_A, P_B).toShape(),
+                Part.LineSegment(P_B, P_D).toShape(),
+                Part.LineSegment(P_D, P_C).toShape(),
+                Part.LineSegment(P_C, P_A).toShape()
+            ]
+            tooth_profile_wire = Part.Wire(fallback_edges)
+
+        tooth_profile_face = Part.Face(tooth_profile_wire)
+
+        helical_teeth_LH_fused = None
+        lh_z_start = 0
+        lh_z_end = half_gear_height
+        lh_twist_start = 0
+        lh_twist_end = total_angular_twist_rad / 2
+
+        for tooth_idx in range(num_teeth):
+            current_tooth_LH_profiles = []
+            initial_tooth_rotation_deg = tooth_idx * angle_per_tooth
+
+            for i in range(num_loft_sections + 1):
+                z_pos_current = lh_z_start + (lh_z_end - lh_z_start) * (i / num_loft_sections)
+                current_slice_twist_angle_rad = lh_twist_start + (lh_twist_end - lh_twist_start) * (i / num_loft_sections)
+
+                combined_rotation_deg = initial_tooth_rotation_deg + math.degrees(current_slice_twist_angle_rad)
+
+                profile_copy = tooth_profile_face.copy()
+                profile_copy.Placement = Placement(
+                    Vector(0, 0, z_pos_current),
+                    Rotation(Vector(0, 0, 1), combined_rotation_deg)
+                )
+                current_tooth_LH_profiles.append(profile_copy)
+
+            helical_tooth_LH_solid = Part.makeLoft(current_tooth_LH_profiles, True)
+
+            if helical_teeth_LH_fused is None:
+                helical_teeth_LH_fused = helical_tooth_LH_solid
+            else:
+                helical_teeth_LH_fused = helical_teeth_LH_fused.fuse(helical_tooth_LH_solid)
+
+        obj_helical_LH = doc.addObject("Part::Feature", "HelicalTeeth_Left_Section")
+        obj_helical_LH.Shape = helical_teeth_LH_fused
+        obj_helical_LH.ViewObject.ShapeColor = (0.7, 0.7, 0.9)
+
+        helical_teeth_RH_fused = None
+        rh_z_start = half_gear_height
+        rh_z_end = gear_total_height
+        rh_twist_start = total_angular_twist_rad / 2
+        rh_twist_end = 0
+
+        for tooth_idx in range(num_teeth):
+            current_tooth_RH_profiles = []
+            initial_tooth_rotation_deg = tooth_idx * angle_per_tooth
+
+            for i in range(num_loft_sections + 1):
+                z_pos_current = rh_z_start + (rh_z_end - rh_z_start) * (i / num_loft_sections)
+                current_slice_twist_angle_rad = rh_twist_start + (rh_twist_end - rh_twist_start) * (i / num_loft_sections)
+
+                combined_rotation_deg = initial_tooth_rotation_deg + math.degrees(current_slice_twist_angle_rad)
+
+                profile_copy = tooth_profile_face.copy()
+                profile_copy.Placement = Placement(
+                    Vector(0, 0, z_pos_current),
+                    Rotation(Vector(0, 0, 1), combined_rotation_deg)
+                )
+                current_tooth_RH_profiles.append(profile_copy)
+
+            helical_tooth_RH_solid = Part.makeLoft(current_tooth_RH_profiles, True)
+
+            if helical_teeth_RH_fused is None:
+                helical_teeth_RH_fused = helical_tooth_RH_solid
+            else:
+                helical_teeth_RH_fused = helical_teeth_RH_fused.fuse(helical_tooth_RH_solid)
+
+        obj_helical_RH = doc.addObject("Part::Feature", "HelicalTeeth_Right_Section")
+        obj_helical_RH.Shape = helical_teeth_RH_fused
+        obj_helical_RH.ViewObject.ShapeColor = (0.7, 0.9, 0.7)
+
+        combined_teeth_sections = doc.addObject("Part::Fuse", "Combined_Teeth_Sections")
+        combined_teeth_sections.Base = obj_helical_LH
+        combined_teeth_sections.Tool = obj_helical_RH
+
+        final_gear = doc.addObject("Part::Fuse", "HerringboneGear_Complete")
+        final_gear.Base = hub_base
+        final_gear.Tool = combined_teeth_sections
+
+        final_gear.ViewObject.ShapeColor = (0.8, 0.6, 0.9)
+
+        if central_bore_diameter > 0:
+            central_bore.ViewObject.Visibility = False
+        gear_hub.ViewObject.Visibility = False
+        hub_base.ViewObject.Visibility = False
+        obj_helical_LH.ViewObject.Visibility = False
+        obj_helical_RH.ViewObject.Visibility = False
+        combined_teeth_sections.ViewObject.Visibility = False
+
+        doc.recompute()
+        Gui.activeDocument().activeView().viewAxometric()
+        Gui.SendMsgToActiveView("ViewFit")
+
+        return doc
+
+    if __name__ == "__main__":
+        createHerringboneGear()

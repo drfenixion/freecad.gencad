@@ -1,0 +1,9 @@
+Use Sketcher workbench for create sketches as basis for bodies.
+Dont set redundant contstrains! 
+If using sketches as basis for body do Sketch_obj.Visibility = False.
+If using sketches as basis for body use Pad and other posibities to create bodies.
+
+Dont set Sketch_obj.AttachmentSupport='Y_Axis' it lead to error! Use Sketch_obj.AttachmentSupport='XY_Plane'
+Dont set Sketch_obj.AttachmentSupport = (doc.Origin.OriginFeatures[2], ['']) # It is not XY_Plane! Use like Sketch_obj.AttachmentSupport = (body.getObject('XY_Plane'), [''])
+Dont use doc.Origin.OriginFeatures[0] by index! Use only by name!
+DONT SET constraints! (DONT use sketch.addConstraint!)

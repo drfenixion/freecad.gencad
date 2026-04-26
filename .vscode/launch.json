@@ -1,0 +1,44 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                // {
+                //     "localRoot": "${workspaceFolder}",
+                //     "remoteRoot": "${userHome}/.local/share/FreeCAD/Mod/GenCAD",
+                // },
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "${userHome}/.local/share/FreeCAD/v1-1/Mod/GenCAD",
+                }
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "Python Conda Mod: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "${userHome}/miniconda3/envs/freecad_1_0_312/share/Mod/GenCAD"
+                } 
+            ],
+            "justMyCode": true
+        },
+    ]
+}
