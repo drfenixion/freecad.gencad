@@ -134,7 +134,7 @@ user_input + system_instruction → (LLM → generated code → test execution i
 ```
 GenCAD/
 ├── InitGui.py                  # Workbench GUI initialization
-├── GenCADCommands.py           # Command definitions (Create, Export, Settings)
+├── GenCADCommands.py           # Command definitions (Create, Modify, Export, Settings)
 ├── GenCADConfig.py             # Configuration management
 ├── GenCADDialog.py             # Dialog windows (main dialog, settings)
 ├── GenCADProgressDialog.py     # Progress dialog with spinner
