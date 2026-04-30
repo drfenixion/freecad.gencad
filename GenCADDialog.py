@@ -124,14 +124,20 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.use_rag_checkbox.setToolTip("Use RAG (Retrieval-Augmented Generation) to include FreeCAD documentation context")
         modeling_options_layout.addRow("Use RAG Context:", self.use_rag_checkbox)
 
-        # 6) Max retries for fixing script
+        # 6) Use LLM part verification
+        self.use_part_verification_checkbox = QtWidgets.QCheckBox()
+        self.use_part_verification_checkbox.setChecked(False)
+        self.use_part_verification_checkbox.setToolTip("Enable LLM verification of generated code parameters against user request after successful test execution")
+        modeling_options_layout.addRow("Use LLM Part Verification:", self.use_part_verification_checkbox)
+
+        # 7) Max retries for fixing script
         self.max_retries_spinbox = QtWidgets.QSpinBox()
         self.max_retries_spinbox.setRange(1, 10)
         self.max_retries_spinbox.setValue(5)
         self.max_retries_spinbox.setToolTip("Maximum number of retries for fixing failed FreeCAD scripts")
         modeling_options_layout.addRow("Max Retries for Fix:", self.max_retries_spinbox)
 
-        # 7) Use Fasteners WB
+        # 8) Use Fasteners WB
         self.use_fasteners_wb_checkbox = QtWidgets.QCheckBox()
         self.use_fasteners_wb_checkbox.setChecked(False)
         self.use_fasteners_wb_checkbox.setToolTip("Use Fasteners workbench for attaching fasteners to circular edges")
@@ -382,6 +388,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.circular_placement_combo.setCurrentText(config.get_setting('circular_placement', 'Use PartDesign_PolarPattern'))
         self.use_rag_checkbox.setChecked(config.get_setting('use_rag', False))
         self.use_fasteners_wb_checkbox.setChecked(config.get_setting('use_fasteners_wb', False))
+        self.use_part_verification_checkbox.setChecked(config.get_setting('use_part_verification', False))
         self.max_retries_spinbox.setValue(config.get_setting('max_retries_of_fix_script', 5))
 
         # Apply workbench-dependent circular placement locking
@@ -437,6 +444,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
             'circular_placement': self.circular_placement_combo.currentText(),
             'use_rag': self.use_rag_checkbox.isChecked(),
             'use_fasteners_wb': self.use_fasteners_wb_checkbox.isChecked(),
+            'use_part_verification': self.use_part_verification_checkbox.isChecked(),
             'max_retries_of_fix_script': self.max_retries_spinbox.value(),
             # LLM settings
             'provider': self.provider_combo.currentText(),
