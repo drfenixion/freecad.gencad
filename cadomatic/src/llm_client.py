@@ -68,7 +68,13 @@ def _load_config():
 
 
 def convert_langchain_messages_to_dicts(messages):
-    """Convert LangChain messages to dict format for API calls."""
+    """Convert LangChain messages to dict format for API calls.
+    
+    Supports multimodal content with images via additional_kwargs.
+    """
+    import base64
+    from pathlib import Path
+    
     role_map = {
         SystemMessage: "system",
         HumanMessage: "user",
@@ -78,7 +84,48 @@ def convert_langchain_messages_to_dicts(messages):
     for msg in messages:
         for msg_type, role in role_map.items():
             if isinstance(msg, msg_type):
-                converted.append({"role": role, "content": msg.content})
+                message_dict = {"role": role}
+                
+                # Check for images in additional_kwargs
+                images = getattr(msg, 'additional_kwargs', {}).get('images', [])
+                if images:
+                    # Build multimodal content array
+                    content_parts = [{"type": "text", "text": msg.content}]
+                    for image_source in images:
+                        if isinstance(image_source, (str, Path)) and Path(image_source).exists():
+                            # Read image file and encode as base64
+                            image_path = Path(image_source)
+                            with open(image_path, "rb") as f:
+                                image_bytes = f.read()
+                            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+                            
+                            # Determine MIME type from extension
+                            mime_type = "image/png"
+                            if image_path.suffix.lower() in ['.jpg', '.jpeg']:
+                                mime_type = "image/jpeg"
+                            elif image_path.suffix.lower() == '.webp':
+                                mime_type = "image/webp"
+                            
+                            content_parts.append({
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{mime_type};base64,{image_base64}"
+                                }
+                            })
+                        elif isinstance(image_source, bytes):
+                            # Already have image bytes
+                            image_base64 = base64.b64encode(image_source).decode('utf-8')
+                            content_parts.append({
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{image_base64}"
+                                }
+                            })
+                    message_dict["content"] = content_parts
+                else:
+                    message_dict["content"] = msg.content
+                    
+                converted.append(message_dict)
                 break
         else:
             converted.append(msg)

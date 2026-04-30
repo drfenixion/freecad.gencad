@@ -1,6 +1,7 @@
 # GenCADCommands.py
 # Defines the commands for the GenCAD workbench
 
+import time
 import uuid
 import FreeCAD
 import FreeCADGui
@@ -788,12 +789,13 @@ Respond with the modified FreeCAD Python code only.
                 log_callback(msg)
             FreeCAD.Console.PrintMessage(f"{msg}\n")
 
-            # Check if LLM part verification is enabled (optional feature)
+            # Check if any verification is enabled (optional feature)
             from GenCADConfig import config
-            use_verification = config.get_setting('use_part_verification', False)
+            use_visual_verification = config.get_setting('use_part_visual_verification', False)
+            use_code_verification = config.get_setting('use_part_verification', False)
 
-            if use_verification:
-                msg = "🔍 Launching LLM part verification..."
+            if use_visual_verification or use_code_verification:
+                msg = "🔍 Launching part verification..."
                 if log_callback:
                     log_callback(msg)
                 FreeCAD.Console.PrintMessage(f"{msg}\n")
@@ -992,8 +994,24 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
         thread = threading.Thread(target=worker, daemon=True)
         thread.start()
 
+    def _capture_screenshot(self):
+        """Capture a screenshot of the current 3D view and return the path."""
+        screenshot_path = os.path.join(_get_gen_dir(), "screenshot.png")
+        try:
+            exec(GUI_SNIPPET)
+            view = FreeCADGui.ActiveDocument.ActiveView
+            view.saveImage(screenshot_path, 720, 480, 'White')
+            FreeCAD.Console.PrintMessage(f"📸 Screenshot saved at {screenshot_path}\n")
+            return screenshot_path
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Failed to capture screenshot: {str(e)}\n")
+            return None
+
     def _verify_code_in_background(self):
-        """Run LLM verification on successfully executed code in a background thread."""
+        """Run LLM verification on successfully executed code in a background thread.
+        
+        First runs visual verification (if enabled), then code verification (if enabled).
+        """
         import threading
 
         state = self._fix_loop_state
@@ -1006,57 +1024,122 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                 # Check if cancel was requested before starting
                 if self._check_cancel_and_stop(log_callback):
                     return
-                
-                msg = "=" * 60 + '\n' + "⟳ Running LLM part verification..." + '\n' + "=" * 60
-                if log_callback:
-                    log_callback(msg)
-                FreeCAD.Console.PrintMessage(f"{msg}\n")
 
-                # Import and run verification
-                from cadomatic.src.part_verify import verify_generated_code
-                result = verify_generated_code(description, generated_code)
+                from GenCADConfig import config
+                use_visual_verification = config.get_setting('use_part_visual_verification', False)
+                use_code_verification = config.get_setting('use_part_verification', False)
 
-                # Check if cancel was requested after verification
-                if self._check_cancel_and_stop(log_callback):
-                    return
+                current_code = generated_code
+                screenshot_path = None
 
-                if result['verified']:
-                    msg = "✓ LLM verification passed: code matches request."
-                    if log_callback:
-                        log_callback(msg)
-                    FreeCAD.Console.PrintMessage(f"{msg}\n")
-                    # Stop the spinner and show result in main thread via signal
-                    self._fix_loop_signaler.verification_success_signal.emit()
-                else:
-                    msg = "⚠ LLM verification failed: code needs corrections."
+                # Step 1: Visual verification (if enabled)
+                if use_visual_verification:
+                    msg = "=" * 60 + '\n' + "⟳ Running visual part verification..." + '\n' + "=" * 60
                     if log_callback:
                         log_callback(msg)
                     FreeCAD.Console.PrintMessage(f"{msg}\n")
 
-                    # Save corrected code
-                    corrected_code = result['corrected_code']
-                    if corrected_code:
-                        import debugpy; debugpy.breakpoint()
-                        state['generated_code'] = corrected_code
-                        with open(state['script_path'], 'w') as f:
-                            f.write(corrected_code)
+                    # Capture screenshot in main thread (GUI operation)
+                    screenshot_path = self._capture_screenshot()
 
-                        msg = "Corrected code written by LLM verification."
+                    if screenshot_path:
+                        from cadomatic.src.part_verify import verify_part_visual
+                        visual_result = verify_part_visual(screenshot_path, description, current_code)
+
+                        # Check if cancel was requested after verification
+                        if self._check_cancel_and_stop(log_callback):
+                            return
+
+                        if not visual_result['verified']:
+                            msg = "⚠ Visual verification failed: geometry needs corrections."
+                            if log_callback:
+                                log_callback(msg)
+                            FreeCAD.Console.PrintMessage(f"{msg}\n")
+
+                            corrected_code = visual_result['corrected_code']
+                            if corrected_code:
+                                current_code = corrected_code
+                                state['generated_code'] = corrected_code
+                                with open(state['script_path'], 'w') as f:
+                                    f.write(corrected_code)
+
+                                msg = "Corrected code written by visual verification."
+                                if log_callback:
+                                    log_callback(msg)
+                                FreeCAD.Console.PrintMessage(f"{msg}\n")
+
+                                # Signal to run next iteration on main thread (test the corrected code)
+                                self._fix_loop_signaler.continue_signal.emit()
+                                return
+                            else:
+                                msg = "⚠ Visual verification returned no corrected code."
+                                if log_callback:
+                                    log_callback(msg)
+                                FreeCAD.Console.PrintMessage(f"{msg}\n")
+                        else:
+                            msg = "✓ Visual verification passed: geometry matches request."
+                            if log_callback:
+                                log_callback(msg)
+                            FreeCAD.Console.PrintMessage(f"{msg}\n")
+                    else:
+                        msg = "⚠ Visual verification skipped: could not capture screenshot."
                         if log_callback:
                             log_callback(msg)
                         FreeCAD.Console.PrintMessage(f"{msg}\n")
 
-                        # Signal to run next iteration on main thread (test the corrected code)
-                        self._fix_loop_signaler.continue_signal.emit()
-                    else:
-                        msg = "⚠ Verification returned no corrected code. Stopping."
+                # Step 2: Code verification (if enabled)
+                if use_code_verification:
+                    msg = "=" * 60 + '\n' + "⟳ Running LLM code verification..." + '\n' + "=" * 60
+                    if log_callback:
+                        log_callback(msg)
+                    FreeCAD.Console.PrintMessage(f"{msg}\n")
+
+                    from cadomatic.src.part_verify import verify_generated_code
+                    code_result = verify_generated_code(description, current_code)
+
+                    # Check if cancel was requested after verification
+                    if self._check_cancel_and_stop(log_callback):
+                        return
+
+                    if code_result['verified']:
+                        msg = "✓ LLM code verification passed: code matches request."
                         if log_callback:
                             log_callback(msg)
-                        FreeCAD.Console.PrintError(f"{msg}\n")
-                        self._fix_loop_signaler.verification_failed_signal.emit()
+                        FreeCAD.Console.PrintMessage(f"{msg}\n")
+                        # Stop the spinner and show result in main thread via signal
+                        self._fix_loop_signaler.verification_success_signal.emit()
+                    else:
+                        msg = "⚠ LLM code verification failed: code needs corrections."
+                        if log_callback:
+                            log_callback(msg)
+                        FreeCAD.Console.PrintMessage(f"{msg}\n")
+
+                        # Save corrected code
+                        corrected_code = code_result['corrected_code']
+                        if corrected_code:
+                            state['generated_code'] = corrected_code
+                            with open(state['script_path'], 'w') as f:
+                                f.write(corrected_code)
+
+                            msg = "Corrected code written by LLM code verification."
+                            if log_callback:
+                                log_callback(msg)
+                            FreeCAD.Console.PrintMessage(f"{msg}\n")
+
+                            # Signal to run next iteration on main thread (test the corrected code)
+                            self._fix_loop_signaler.continue_signal.emit()
+                        else:
+                            msg = "⚠ Code verification returned no corrected code. Stopping."
+                            if log_callback:
+                                log_callback(msg)
+                            FreeCAD.Console.PrintError(f"{msg}\n")
+                            self._fix_loop_signaler.verification_failed_signal.emit()
+                else:
+                    # No verification needed - stop the spinner on successful execution
+                    self._fix_loop_signaler.verification_success_signal.emit()
 
             except Exception as e:
-                msg = f"Error in LLM verification: {str(e)}"
+                msg = f"Error in verification: {str(e)}"
                 if log_callback:
                     log_callback(msg)
                 FreeCAD.Console.PrintError(f"{msg}\n")
