@@ -106,11 +106,11 @@ Code:
         }
 
 
-def verify_part_visual(screenshot_path: str, user_request: str, generated_code: str) -> dict:
-    """Verify generated part visually using screenshot and user request via LLM.
+def verify_part_visual(screenshot_paths: list, user_request: str, generated_code: str) -> dict:
+    """Verify generated part visually using screenshots from multiple views and user request via LLM.
 
     Args:
-        screenshot_path: Path to the screenshot image of the generated part
+        screenshot_paths: List of paths to screenshot images (isometric, top, front, right)
         user_request: The original user description/request
         generated_code: The generated FreeCAD Python code
 
@@ -122,24 +122,36 @@ def verify_part_visual(screenshot_path: str, user_request: str, generated_code: 
     """
     from src.llm_client import _invoke_llm
 
-    if not os.path.exists(screenshot_path):
+    if not screenshot_paths:
         return {
             "verified": True,
             "corrected_code": None,
-            "raw_response": f"Visual verification skipped: screenshot not found at {screenshot_path}",
+            "raw_response": "Visual verification skipped: no screenshots provided",
+        }
+
+    # Check that all screenshot files exist
+    valid_paths = [p for p in screenshot_paths if os.path.exists(p)]
+    if not valid_paths:
+        return {
+            "verified": True,
+            "corrected_code": None,
+            "raw_response": f"Visual verification skipped: no valid screenshot files found",
         }
 
     # Build the verification prompt
     user_prompt = f"""
+You are given {len(valid_paths)} screenshots of the generated part from different views (isometric, top, front, right).
+
 User Request: {user_request}
 
 Generated Code:
 {generated_code}
+
 """
 
     messages = [
         SystemMessage(content=VISUAL_VERIFICATION_SYSTEM_PROMPT),
-        HumanMessage(content=user_prompt, additional_kwargs={"images": [screenshot_path]}),
+        HumanMessage(content=user_prompt, additional_kwargs={"images": valid_paths}),
     ]
 
     try:

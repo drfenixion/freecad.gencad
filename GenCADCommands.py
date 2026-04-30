@@ -994,18 +994,45 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
         thread = threading.Thread(target=worker, daemon=True)
         thread.start()
 
-    def _capture_screenshot(self):
-        """Capture a screenshot of the current 3D view and return the path."""
-        screenshot_path = os.path.join(_get_gen_dir(), "screenshot.png")
+    def _capture_screenshots(self):
+        """Capture screenshots from 4 standard views and return list of paths.
+        
+        Views: isometric, top, front, right
+        """
+        import time
+        gen_dir = _get_gen_dir()
+        screenshot_paths = []
+        
+        # View directions for FreeCAD: (x, y, z) camera position relative to origin
+        view_directions = {
+            "isometric": (1, 1, 1),
+            "top": (0, 0, 1),
+            "front": (0, -1, 0),
+            "right": (1, 0, 0),
+        }
+        
         try:
-            exec(GUI_SNIPPET)
+            
             view = FreeCADGui.ActiveDocument.ActiveView
-            view.saveImage(screenshot_path, 720, 480, 'White')
-            FreeCAD.Console.PrintMessage(f"📸 Screenshot saved at {screenshot_path}\n")
-            return screenshot_path
+            view.setAnimationEnabled(False)
+            
+            for view_name, direction in view_directions.items():
+                # Set camera view direction
+                view.setViewDirection(direction)
+                # Small delay to allow view to update
+                # time.sleep(0.5)
+                FreeCADGui.SendMsgToActiveView("ViewFit")
+                # time.sleep(0.5)
+                screenshot_path = os.path.join(gen_dir, f"screenshot_{view_name}.png")
+                view.saveImage(screenshot_path, 720, 480, 'White')
+                screenshot_paths.append(screenshot_path)
+                FreeCAD.Console.PrintMessage(f"📸 Screenshot saved at {screenshot_path}\n")
+            return screenshot_paths
         except Exception as e:
-            FreeCAD.Console.PrintError(f"Failed to capture screenshot: {str(e)}\n")
-            return None
+            FreeCAD.Console.PrintError(f"Failed to capture screenshots: {str(e)}\n")
+            return []
+        finally:
+            view.setAnimationEnabled(True)
 
     def _verify_code_in_background(self):
         """Run LLM verification on successfully executed code in a background thread.
@@ -1039,12 +1066,12 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                         log_callback(msg)
                     FreeCAD.Console.PrintMessage(f"{msg}\n")
 
-                    # Capture screenshot in main thread (GUI operation)
-                    screenshot_path = self._capture_screenshot()
+                    # Capture screenshots from 4 views in main thread (GUI operation)
+                    screenshot_paths = self._capture_screenshots()
 
-                    if screenshot_path:
+                    if screenshot_paths:
                         from cadomatic.src.part_verify import verify_part_visual
-                        visual_result = verify_part_visual(screenshot_path, description, current_code)
+                        visual_result = verify_part_visual(screenshot_paths, description, current_code)
 
                         # Check if cancel was requested after verification
                         if self._check_cancel_and_stop(log_callback):
