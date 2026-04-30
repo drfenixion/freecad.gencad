@@ -110,7 +110,7 @@ def verify_part_visual(screenshot_paths: list, user_request: str, generated_code
     """Verify generated part visually using screenshots from multiple views and user request via LLM.
 
     Args:
-        screenshot_paths: List of paths to screenshot images (isometric, top, front, right)
+        screenshot_paths: List of paths to screenshot images (isometric, top, front, right, bottom, rear, left)
         user_request: The original user description/request
         generated_code: The generated FreeCAD Python code
 
@@ -140,7 +140,7 @@ def verify_part_visual(screenshot_paths: list, user_request: str, generated_code
 
     # Build the verification prompt
     user_prompt = f"""
-You are given {len(valid_paths)} screenshots of the generated part from different views (isometric, top, front, right).
+You are given {len(valid_paths)} screenshots of the generated part from different views (isometric, top, front, right, bottom, rear, left).
 
 User Request: {user_request}
 

@@ -995,9 +995,9 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
         thread.start()
 
     def _capture_screenshots(self):
-        """Capture screenshots from 4 standard views and return list of paths.
+        """Capture screenshots from 7 standard views and return list of paths.
         
-        Views: isometric, top, front, right
+        Views: isometric, top, front, right, bottom, rear, left
         """
         import time
         gen_dir = _get_gen_dir()
@@ -1009,6 +1009,9 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
             "top": (0, 0, 1),
             "front": (0, -1, 0),
             "right": (1, 0, 0),
+            "bottom": (0, 0, -1),
+            "rear": (0, 1, 0),
+            "left": (-1, 0, 0),
         }
         
         try:
