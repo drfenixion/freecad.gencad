@@ -18,6 +18,20 @@
 
 ![GenCAD Logo](images/gencad_big_logo.png)
 
+## Disclaimer
+
+> **GenCAD automatically tests the LLM-generated code directly in FreeCAD using its Python interpreter.**
+>
+> By using GenCAD, you should understand that the generated code could theoretically cause harm to your files. In practice, during all testing time, there has not been a single case of problems caused by the generated code. Nevertheless, remember that the generation depends on your request, model and has a randomness factor.
+>
+> **"Generation depends on your request"** means — do not ask GenCAD for anything that could harm your system.
+>
+> **IMPORTANT: You use GenCAD at your own risk and under your own responsibility. If you want more safety, use an isolated environment for FreeCAD.**
+>
+> **The generated model may be inaccurate or incorrect. Always verify the result.**
+>
+> **IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.**
+
 ## Installation
 
 ### Via FreeCAD Addon Manager
@@ -84,12 +98,6 @@ Choose your preferred LLM backend:
 - **Ollama** — Local or cloud models (supports `gemini-3-flash-preview:cloud` - may be free cloud quota)
 - **RouterAIru** — Alternative cloud provider
 
-#### API Keys
-Enter your API keys for OpenRouter and/or RouterAIru. Keys can be hidden/shown using the toggle button.
-
-#### Model Configuration
-Set the model name for each provider. Default: `google/gemini-3-flash-preview`
-
 ### OPTIONAL: Ollama Setup (Linux)
 
 ```bash
@@ -127,7 +135,7 @@ user_input + system_instruction → (LLM → generated code → test execution i
 ```
 GenCAD/
 ├── InitGui.py                  # Workbench GUI initialization
-├── GenCADCommands.py           # Command definitions (Create, Export, Settings)
+├── GenCADCommands.py           # Command definitions (Create, Modify, Export, Settings)
 ├── GenCADConfig.py             # Configuration management
 ├── GenCADDialog.py             # Dialog windows (main dialog, settings)
 ├── GenCADProgressDialog.py     # Progress dialog with spinner
@@ -155,20 +163,6 @@ GenCAD/
 - Internet connection (for cloud LLM providers)
 - API keys for OpenRouter or RouterAIru (if using cloud providers)
 
-## Disclaimer
-
-> **GenCAD automatically tests the LLM-generated code directly in FreeCAD using its Python interpreter.**
->
-> By using GenCAD, you should understand that the generated code could theoretically cause harm to your files. In practice, during all testing time, there has not been a single case of problems caused by the generated code. Nevertheless, remember that the generation depends on your request, model and has a randomness factor.
->
-> **"Generation depends on your request"** means — do not ask GenCAD for anything that could harm your system.
->
-> **IMPORTANT: You use GenCAD at your own risk and under your own responsibility. If you want more safety, use an isolated environment for FreeCAD.**
->
-> **The generated model may be inaccurate or incorrect. Always verify the result.**
->
-> **IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.**
-
 ## Screenshots
 
 | Screenshot | Description |
@@ -185,4 +179,4 @@ GenCAD/
 
 ## Tags
 
-`AI` · `generative` · `text to object` · `modify by text` · `object to code`
+`AI` · `generative` · `text to CAD object` · `modify CAD object by text` · `convert CAD object to code`
