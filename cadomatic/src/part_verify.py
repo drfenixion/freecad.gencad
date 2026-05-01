@@ -25,7 +25,7 @@ VERIFICATION_SYSTEM_PROMPT = f"""You are a code verification assistant for FreeC
 Your task is to check whether the generated FreeCAD Python code correctly implements the user's request.
 
 Check the following:
-1. All dimensions, parameters, and values match the user's request
+1. All parameters, and values match the user's request
 
 If the code is correct and matches the request, respond exactly with: verified - ok
 
@@ -45,10 +45,13 @@ Your task is to verify whether the visible geometry in the screenshots matches w
 Check the following:
 1. Overall shape and structure matches the request
 2. Key features are present (holes, slots, fillets, etc.)
-3. Proportions and relative sizes look correct
+3. Proportions and relative sizes look correct (check elements parameters and its visual relative sizes)
 4. No obvious visual defects or missing geometry
-5. Composition and orientation of elements
-6. No redundant holes, pads, etc
+5. Composition and semantic orientation of elements (how elements should be orientiated in part)
+6. No redundant holes, pads, etc.
+7. No redundant gaps between elements.
+8. No redundant overlaps between elements.
+9. All parameters, and values match the user's request
 
 Also review the generated code to ensure it matches the request parameters.
 
