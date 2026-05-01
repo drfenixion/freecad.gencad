@@ -66,6 +66,22 @@ print("📸 Screenshot saved at " + screenshot_path)
 """
 
 
+def view_methods(view, view_name=None):
+    view_methods = {
+        "isometric": view.viewIsometric,
+        # "top":       view.viewTop,
+        # "front":     view.viewFront,
+        # "right":     view.viewRight,
+        # "bottom":    view.viewBottom,
+        # "rear":      view.viewBack,  # в API используется viewBack, а не viewRear
+        # "left":      view.viewLeft,
+    }
+
+    if view_name:
+        return view_methods[view_name]()
+    return view_methods
+
+
 def _clean_code_fences(code: str) -> str:
     """Remove markdown code fences and language prefix."""
     if code.startswith("```"):
@@ -795,6 +811,17 @@ Respond with the modified FreeCAD Python code only.
             use_code_verification = config.get_setting('use_part_verification', False)
 
             if use_visual_verification or use_code_verification:
+
+                view = FreeCADGui.ActiveDocument.ActiveView
+                view.setAnimationEnabled(False)
+                view_methods(view, 'isometric')
+                # Small delay to allow view to update
+                time.sleep(0.1)
+                view.fitAll()
+                # FreeCADGui.SendMsgToActiveView("ViewFit")
+                time.sleep(0.1)
+                view.setAnimationEnabled(True)
+
                 msg = "🔍 Launching part verification..."
                 if log_callback:
                     log_callback(msg)
@@ -1002,21 +1029,6 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
         import time
         gen_dir = _get_gen_dir()
         screenshot_paths = []
-        
-        def view_methods(view, view_name=None):
-            view_methods = {
-                "isometric": view.viewIsometric,
-                # "top":       view.viewTop,
-                # "front":     view.viewFront,
-                # "right":     view.viewRight,
-                # "bottom":    view.viewBottom,
-                # "rear":      view.viewBack,  # в API используется viewBack, а не viewRear
-                # "left":      view.viewLeft,
-            }
-
-            if view_name:
-               return view_methods[view_name]()
-            return view_methods
 
         try:
             
