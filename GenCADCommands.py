@@ -1125,7 +1125,7 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
 
                 # Step 2: Code verification (if enabled)
                 if use_code_verification:
-                    msg = "=" * 60 + '\n' + "⟳ Running part code verification..." + '\n' + "=" * 60
+                    msg = "=" * 60 + '\n' + "⟳ Running part code (parameters) verification (LLM request)..." + '\n' + "=" * 60
                     if log_callback:
                         log_callback(msg)
                     FreeCAD.Console.PrintMessage(f"{msg}\n")
@@ -1138,14 +1138,14 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                         return
 
                     if code_result['verified']:
-                        msg = "✓ LLM code verification passed: code matches request."
+                        msg = "✓ Code (parameters) verification passed: code matches request."
                         if log_callback:
                             log_callback(msg)
                         FreeCAD.Console.PrintMessage(f"{msg}\n")
                         # Stop the spinner and show result in main thread via signal
                         self._fix_loop_signaler.verification_success_signal.emit()
                     else:
-                        msg = "⚠ LLM code verification failed: code needs corrections."
+                        msg = "⚠ Code (parameters) verification failed: code needs corrections."
                         if log_callback:
                             log_callback(msg)
                         FreeCAD.Console.PrintMessage(f"{msg}\n")
@@ -1157,7 +1157,7 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                             with open(state['script_path'], 'w') as f:
                                 f.write(corrected_code)
 
-                            msg = "Corrected code written by LLM code verification."
+                            msg = "Corrected code written by Code (parameters) verification."
                             if log_callback:
                                 log_callback(msg)
                             FreeCAD.Console.PrintMessage(f"{msg}\n")
@@ -1165,7 +1165,7 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                             # Signal to run next iteration on main thread (test the corrected code)
                             self._fix_loop_signaler.continue_signal.emit()
                         else:
-                            msg = "⚠ Code verification returned no corrected code. Stopping."
+                            msg = "⚠ Code (parameters) verification returned no corrected code. Stopping."
                             if log_callback:
                                 log_callback(msg)
                             FreeCAD.Console.PrintError(f"{msg}\n")
