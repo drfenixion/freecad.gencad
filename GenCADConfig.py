@@ -37,8 +37,8 @@ class GenCADConfig:
             'circular_placement': 'Use PartDesign_PolarPattern',
             'use_rag': False,  # RAG enabled by default
             'use_fasteners_wb': False,  # Fasteners WB disabled by default
-            'use_part_verification': False,  # LLM part verification disabled by default
-            'use_part_visual_verification': False,  # Visual part verification disabled by default
+            'use_part_verification': True,  # LLM part verification enabled by default
+            'use_part_visual_verification': True,  # Visual part verification enabled by default
             'max_retries_of_fix_script': 5,  # Max retries for fixing script
             # LLM settings
             'provider': 'OpenRouter',  # Default provider
