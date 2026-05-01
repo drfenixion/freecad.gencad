@@ -230,7 +230,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         # Ollama VLM model
         ollama_vlm_model_layout = QtWidgets.QHBoxLayout()
         self.ollama_vlm_model = QtWidgets.QLineEdit()
-        self.ollama_vlm_model.setText("qwen3.6")  # Default
+        self.ollama_vlm_model.setText("gemini-3-flash-preview:cloud")  # Default
         self.reset_ollama_vlm_model = QtWidgets.QPushButton("Reset")
         ollama_vlm_model_layout.addWidget(self.ollama_vlm_model)
         ollama_vlm_model_layout.addWidget(self.reset_ollama_vlm_model)
@@ -239,7 +239,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         # OpenRouter VLM model
         openrouter_vlm_model_layout = QtWidgets.QHBoxLayout()
         self.openrouter_vlm_model = QtWidgets.QLineEdit()
-        self.openrouter_vlm_model.setText("qwen/qwen3.6-plus")  # Default
+        self.openrouter_vlm_model.setText("google/gemini-3-flash-preview")  # Default
         self.reset_openrouter_vlm_model = QtWidgets.QPushButton("Reset")
         openrouter_vlm_model_layout.addWidget(self.openrouter_vlm_model)
         openrouter_vlm_model_layout.addWidget(self.reset_openrouter_vlm_model)
@@ -248,7 +248,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         # ROUTERAIRU VLM model
         routerairu_vlm_model_layout = QtWidgets.QHBoxLayout()
         self.routerairu_vlm_model = QtWidgets.QLineEdit()
-        self.routerairu_vlm_model.setText("qwen/qwen3.6-plus")  # Default
+        self.routerairu_vlm_model.setText("google/gemini-3-flash-preview")  # Default
         self.reset_routerairu_vlm_model = QtWidgets.QPushButton("Reset")
         routerairu_vlm_model_layout.addWidget(self.routerairu_vlm_model)
         routerairu_vlm_model_layout.addWidget(self.reset_routerairu_vlm_model)
@@ -310,6 +310,29 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         disclaimer_group.setLayout(disclaimer_layout)
         layout.addWidget(disclaimer_group)
 
+        # === Sponsorship Widget ===
+        vertical_spacer = QtWidgets.QSpacerItem(20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        layout.addItem(vertical_spacer)
+
+        sponsorship_group = QtWidgets.QGroupBox("GenCAD is sponsored by:")
+        sponsorship_layout = QtWidgets.QVBoxLayout()
+        sponsorship_layout.setContentsMargins(9, 9, 9, 9)
+
+        sponsorship_description = QtWidgets.QLabel("Here can be your sponsorship or ads")
+        sponsorship_description.setFont(QtGui.QFont("", 20, QtGui.QFont.Bold))
+        sponsorship_layout.addWidget(sponsorship_description)
+
+        sponsorship_email = QtWidgets.QLabel('Write to <a href="mailto:it.project.devel@gmail.com">it.project.devel@gmail.com</a>')
+        sponsorship_email.setFont(QtGui.QFont("", 10, QtGui.QFont.Bold))
+        sponsorship_email.setTextFormat(QtCore.Qt.RichText)
+        sponsorship_email.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        sponsorship_email.setOpenExternalLinks(True)
+        sponsorship_layout.addWidget(sponsorship_email)
+
+        sponsorship_group.setLayout(sponsorship_layout)
+        layout.addWidget(sponsorship_group)
+        layout.addItem(vertical_spacer)
+
         # === Buttons ===
         button_layout = QtWidgets.QHBoxLayout()
 
@@ -331,9 +354,9 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.reset_ollama_model.clicked.connect(lambda: self.ollama_model.setText("gemini-3-flash-preview:cloud"))
         self.reset_openrouter_model.clicked.connect(lambda: self.openrouter_model.setText("google/gemini-3-flash-preview"))
         self.reset_routerairu_model.clicked.connect(lambda: self.routerairu_model.setText("google/gemini-3-flash-preview"))
-        self.reset_ollama_vlm_model.clicked.connect(lambda: self.ollama_vlm_model.setText("qwen3.6"))
-        self.reset_openrouter_vlm_model.clicked.connect(lambda: self.openrouter_vlm_model.setText("qwen/qwen3.6-plus"))
-        self.reset_routerairu_vlm_model.clicked.connect(lambda: self.routerairu_vlm_model.setText("qwen/qwen3.6-plus"))
+        self.reset_ollama_vlm_model.clicked.connect(lambda: self.ollama_vlm_model.setText("gemini-3-flash-preview:cloud"))
+        self.reset_openrouter_vlm_model.clicked.connect(lambda: self.openrouter_vlm_model.setText("google/gemini-3-flash-preview"))
+        self.reset_routerairu_vlm_model.clicked.connect(lambda: self.routerairu_vlm_model.setText("google/gemini-3-flash-preview"))
 
         # Connect workbench change to update circular placement
         self.workbench_combo.currentTextChanged.connect(self._on_workbench_changed)
@@ -465,9 +488,9 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.openrouter_model.setText(config.get_setting('openrouter_model', 'google/gemini-3-flash-preview'))
         self.routerairu_model.setText(config.get_setting('routerairu_model', 'google/gemini-3-flash-preview'))
         # Load VLM model names
-        self.ollama_vlm_model.setText(config.get_setting('ollama_vlm_model', 'qwen3.6'))
-        self.openrouter_vlm_model.setText(config.get_setting('openrouter_vlm_model', 'qwen/qwen3.6-plus'))
-        self.routerairu_vlm_model.setText(config.get_setting('routerairu_vlm_model', 'qwen/qwen3.6-plus'))
+        self.ollama_vlm_model.setText(config.get_setting('ollama_vlm_model', 'gemini-3-flash-preview:cloud'))
+        self.openrouter_vlm_model.setText(config.get_setting('openrouter_vlm_model', 'google/gemini-3-flash-preview'))
+        self.routerairu_vlm_model.setText(config.get_setting('routerairu_vlm_model', 'google/gemini-3-flash-preview'))
 
     def get_settings(self):
         """Return the current settings"""
