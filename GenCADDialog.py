@@ -434,7 +434,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
             "IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). "
             "Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.\n\n"
             "GenCAD internal workflow:\n"
-            "user_input + system_instruction -> (LLM -> generated code -> test execution in FreeCAD) loop of code fixing."
+            "user_input + system_instruction -> (LLM -> generated code -> test execution in FreeCAD) loop of code fixing and verifying."
         )
         msg_box = QtWidgets.QMessageBox()
         msg_box.setIcon(QtWidgets.QMessageBox.Warning)
