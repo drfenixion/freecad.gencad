@@ -441,7 +441,8 @@ class GenCAD_CreateModel:
                 log_callback = self.generation_dialog.log
             
             # Execute the script in the main thread (GUI-safe) with fix loop
-            self.execute_script_with_fix_loop(result, log_callback)
+            mode = getattr(self, 'operation_mode', 'new')
+            self.execute_script_with_fix_loop(result, log_callback, mode=mode)
         elif error:
             FreeCAD.Console.PrintError(f"Model generation failed: {error}\n")
 
@@ -706,7 +707,7 @@ Respond with the modified FreeCAD Python code only.
             return after[len(before):]
         return after
 
-    def execute_script_with_fix_loop(self, script_path, log_callback=None):
+    def execute_script_with_fix_loop(self, script_path, log_callback=None, mode="new"):
         """Execute the script and run the fix loop if there are errors.
         
         This method runs on the main thread for execution, but triggers
@@ -715,6 +716,7 @@ Respond with the modified FreeCAD Python code only.
         Args:
             script_path: Path to the script to execute
             log_callback: Optional callback for logging messages to the generation dialog
+            mode: "new" for generation, "modify" for modification (verification is skipped for modify)
         """
         from GenCADConfig import config
         
@@ -728,6 +730,7 @@ Respond with the modified FreeCAD Python code only.
             'generated_code': '',
             'log_callback': log_callback,
             'cancelled': False,  # Flag for cancellation
+            'mode': mode,  # Store mode to skip verification for modifications
         }
         
         # Create signaler for thread-safe main thread invocation
@@ -1074,6 +1077,17 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                     return
 
                 from GenCADConfig import config
+                
+                # Skip verification for modify mode
+                operation_mode = state.get('mode', 'new')
+                if operation_mode == 'modify':
+                    msg = "✓ Verification skipped (not implimented yet) for part modification."
+                    if log_callback:
+                        log_callback(msg)
+                    FreeCAD.Console.PrintMessage(f"{msg}\n")
+                    self._fix_loop_signaler.verification_success_signal.emit()
+                    return
+                
                 use_visual_verification = config.get_setting('use_part_visual_verification', False)
                 use_code_verification = config.get_setting('use_part_verification', False)
 
