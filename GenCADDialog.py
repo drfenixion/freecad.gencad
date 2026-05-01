@@ -223,6 +223,40 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         models_group.setLayout(models_layout)
         layout.addWidget(models_group)
 
+        # === VLM Models for Visual Verification ===
+        vlm_models_group = QtWidgets.QGroupBox("VLM Models (for visual verification)")
+        vlm_models_layout = QtWidgets.QFormLayout()
+
+        # Ollama VLM model
+        ollama_vlm_model_layout = QtWidgets.QHBoxLayout()
+        self.ollama_vlm_model = QtWidgets.QLineEdit()
+        self.ollama_vlm_model.setText("qwen3.6")  # Default
+        self.reset_ollama_vlm_model = QtWidgets.QPushButton("Reset")
+        ollama_vlm_model_layout.addWidget(self.ollama_vlm_model)
+        ollama_vlm_model_layout.addWidget(self.reset_ollama_vlm_model)
+        vlm_models_layout.addRow("Ollama VLM Model:", ollama_vlm_model_layout)
+
+        # OpenRouter VLM model
+        openrouter_vlm_model_layout = QtWidgets.QHBoxLayout()
+        self.openrouter_vlm_model = QtWidgets.QLineEdit()
+        self.openrouter_vlm_model.setText("qwen/qwen3.6-plus")  # Default
+        self.reset_openrouter_vlm_model = QtWidgets.QPushButton("Reset")
+        openrouter_vlm_model_layout.addWidget(self.openrouter_vlm_model)
+        openrouter_vlm_model_layout.addWidget(self.reset_openrouter_vlm_model)
+        vlm_models_layout.addRow("OpenRouter VLM Model:", openrouter_vlm_model_layout)
+
+        # ROUTERAIRU VLM model
+        routerairu_vlm_model_layout = QtWidgets.QHBoxLayout()
+        self.routerairu_vlm_model = QtWidgets.QLineEdit()
+        self.routerairu_vlm_model.setText("qwen/qwen3.6-plus")  # Default
+        self.reset_routerairu_vlm_model = QtWidgets.QPushButton("Reset")
+        routerairu_vlm_model_layout.addWidget(self.routerairu_vlm_model)
+        routerairu_vlm_model_layout.addWidget(self.reset_routerairu_vlm_model)
+        vlm_models_layout.addRow("RouterAIru VLM Model:", routerairu_vlm_model_layout)
+
+        vlm_models_group.setLayout(vlm_models_layout)
+        layout.addWidget(vlm_models_group)
+
         # === Dependencies ===
         deps_group = QtWidgets.QGroupBox("Dependencies")
         deps_layout = QtWidgets.QVBoxLayout()
@@ -297,6 +331,9 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.reset_ollama_model.clicked.connect(lambda: self.ollama_model.setText("gemini-3-flash-preview:cloud"))
         self.reset_openrouter_model.clicked.connect(lambda: self.openrouter_model.setText("google/gemini-3-flash-preview"))
         self.reset_routerairu_model.clicked.connect(lambda: self.routerairu_model.setText("google/gemini-3-flash-preview"))
+        self.reset_ollama_vlm_model.clicked.connect(lambda: self.ollama_vlm_model.setText("qwen3.6"))
+        self.reset_openrouter_vlm_model.clicked.connect(lambda: self.openrouter_vlm_model.setText("qwen/qwen3.6-plus"))
+        self.reset_routerairu_vlm_model.clicked.connect(lambda: self.routerairu_vlm_model.setText("qwen/qwen3.6-plus"))
 
         # Connect workbench change to update circular placement
         self.workbench_combo.currentTextChanged.connect(self._on_workbench_changed)
@@ -427,6 +464,10 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.ollama_model.setText(config.get_setting('ollama_model', 'gemini-3-flash-preview:cloud'))
         self.openrouter_model.setText(config.get_setting('openrouter_model', 'google/gemini-3-flash-preview'))
         self.routerairu_model.setText(config.get_setting('routerairu_model', 'google/gemini-3-flash-preview'))
+        # Load VLM model names
+        self.ollama_vlm_model.setText(config.get_setting('ollama_vlm_model', 'qwen3.6'))
+        self.openrouter_vlm_model.setText(config.get_setting('openrouter_vlm_model', 'qwen/qwen3.6-plus'))
+        self.routerairu_vlm_model.setText(config.get_setting('routerairu_vlm_model', 'qwen/qwen3.6-plus'))
 
     def get_settings(self):
         """Return the current settings"""
@@ -460,7 +501,11 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
             'routerairu_api_key': routerairu_key,
             'ollama_model': self.ollama_model.text(),
             'openrouter_model': self.openrouter_model.text(),
-            'routerairu_model': self.routerairu_model.text()
+            'routerairu_model': self.routerairu_model.text(),
+            # VLM models
+            'ollama_vlm_model': self.ollama_vlm_model.text(),
+            'openrouter_vlm_model': self.openrouter_vlm_model.text(),
+            'routerairu_vlm_model': self.routerairu_vlm_model.text(),
         }
 
 

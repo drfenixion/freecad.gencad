@@ -21,6 +21,10 @@ class LoadEnv:
         self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemini-3-flash-preview:cloud")
         self.ROUTERAIRU_API_KEY = os.getenv("ROUTERAIRU_API_KEY")
         self.ROUTERAIRU_MODEL = os.getenv("ROUTERAIRU_MODEL", "google/gemini-3-flash-preview")
+        # VLM models for visual verification
+        self.OLLAMA_VLM_MODEL = os.getenv("OLLAMA_VLM_MODEL", "qwen3.6")
+        self.OPENROUTER_VLM_MODEL = os.getenv("OPENROUTER_VLM_MODEL", "qwen/qwen3.6-plus")
+        self.ROUTERAIRU_VLM_MODEL = os.getenv("ROUTERAIRU_VLM_MODEL", "qwen/qwen3.6-plus")
 
         # Load GenCAD configuration if available
         self._load_gencad_config()
@@ -67,17 +71,20 @@ class LoadEnv:
                 self.USE_OPENROUTER = False
                 self.USE_ROUTERAIRU = False
                 self.OLLAMA_MODEL = self.gencad_config.get('ollama_model', getattr(self, 'OLLAMA_MODEL', 'gemini-3-flash-preview:cloud'))
+                self.OLLAMA_VLM_MODEL = self.gencad_config.get('ollama_vlm_model', getattr(self, 'OLLAMA_VLM_MODEL', 'qwen3.6'))
             elif provider == 'OpenRouter':
                 self.USE_OLLAMA = False
                 self.USE_OPENROUTER = True
                 self.USE_ROUTERAIRU = False
                 self.OPENROUTER_API_KEY = self.gencad_config.get('openrouter_api_key', self.OPENROUTER_API_KEY)
                 self.OPENROUTER_MODEL = self.gencad_config.get('openrouter_model', self.OPENROUTER_MODEL)
+                self.OPENROUTER_VLM_MODEL = self.gencad_config.get('openrouter_vlm_model', getattr(self, 'OPENROUTER_VLM_MODEL', 'qwen/qwen3.6-plus'))
             elif provider == 'RouterAIru':
                 self.USE_OLLAMA = False
                 self.USE_OPENROUTER = False
                 self.USE_ROUTERAIRU = True
                 self.ROUTERAIRU_API_KEY = self.gencad_config.get('routerairu_api_key', getattr(self, 'ROUTERAIRU_API_KEY', ''))
                 self.ROUTERAIRU_MODEL = self.gencad_config.get('routerairu_model', getattr(self, 'ROUTERAIRU_MODEL', 'google/gemini-3-flash-preview'))
+                self.ROUTERAIRU_VLM_MODEL = self.gencad_config.get('routerairu_vlm_model', getattr(self, 'ROUTERAIRU_VLM_MODEL', 'qwen/qwen3.6-plus'))
 
 load_env = LoadEnv()

@@ -125,7 +125,7 @@ Code:
 
 
 def verify_part_visual(screenshot_paths: list, user_request: str, generated_code: str) -> dict:
-    """Verify generated part visually using screenshots from multiple views and user request via LLM.
+    """Verify generated part visually using screenshots from multiple views and user request via VLM.
 
     Args:
         screenshot_paths: List of paths to screenshot images (isometric, top, front, right, bottom, rear, left)
@@ -139,6 +139,25 @@ def verify_part_visual(screenshot_paths: list, user_request: str, generated_code
             - 'raw_response': str — the raw LLM response
     """
     from src.llm_client import _invoke_llm
+    from src.load_environment import load_env
+    from src.llm_client import _reload_config
+    
+    # Reload config to get latest VLM model settings
+    _reload_config()
+    
+    # Determine VLM model based on current provider
+    current_use_ollama = getattr(load_env, 'USE_OLLAMA', False)
+    current_use_openrouter = getattr(load_env, 'USE_OPENROUTER', False)
+    current_use_routerairu = getattr(load_env, 'USE_ROUTERAIRU', False)
+    
+    if current_use_ollama:
+        vlm_model = getattr(load_env, 'OLLAMA_VLM_MODEL', 'qwen3.6')
+    elif current_use_openrouter:
+        vlm_model = getattr(load_env, 'OPENROUTER_VLM_MODEL', 'qwen/qwen3.6-plus')
+    elif current_use_routerairu:
+        vlm_model = getattr(load_env, 'ROUTERAIRU_VLM_MODEL', 'qwen/qwen3.6-plus')
+    else:
+        vlm_model = None  # Use default model
 
     if not screenshot_paths:
         return {
@@ -174,7 +193,8 @@ Generated Code:
     ]
 
     try:
-        response = _invoke_llm(messages)
+        # import debugpy; debugpy.breakpoint()
+        response = _invoke_llm(messages, model=vlm_model)
         response = response.strip()
 
         # Check if verified
@@ -205,6 +225,7 @@ Generated Code:
 
 def _clean_code_fences(code: str) -> str:
     """Remove markdown code fences and language prefix."""
+    # import debugpy; debugpy.breakpoint()
     if code.startswith("```"):
         code = code.strip("`\n ")
         if code.lower().startswith("python"):

@@ -47,6 +47,10 @@ class GenCADConfig:
             'ollama_model': 'gemini-3-flash-preview:cloud',
             'openrouter_model': 'google/gemini-3-flash-preview',
             'routerairu_model': 'google/gemini-3-flash-preview',
+            # VLM models for visual verification
+            'ollama_vlm_model': 'qwen3.6',
+            'openrouter_vlm_model': 'qwen/qwen3.6-plus',
+            'routerairu_vlm_model': 'qwen/qwen3.6-plus',
             # UI preferences
             'api_keys_hidden': False  # UI state for API keys visibility
         }

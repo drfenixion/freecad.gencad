@@ -148,12 +148,17 @@ def _validate_response_content(generated_code: str, api_name: str) -> str:
     return generated_code
 
 
-def call_openrouter_api(messages) -> str:
-    """Call LLM via OpenRouter API to generate CAD code."""
+def call_openrouter_api(messages, model=None) -> str:
+    """Call LLM via OpenRouter API to generate CAD code.
+    
+    Args:
+        messages: List of messages to send
+        model: Optional model override (uses config default if None)
+    """
     _reload_config()
     
     openrouter_api_key = getattr(load_env, 'OPENROUTER_API_KEY', '')
-    openrouter_model = getattr(load_env, 'OPENROUTER_MODEL', 'google/gemini-3-flash-preview')
+    openrouter_model = model or getattr(load_env, 'OPENROUTER_MODEL', 'google/gemini-3-flash-preview')
 
     if not openrouter_api_key:
         raise ValueError("OPENROUTER_API_KEY not set in environment")
@@ -204,14 +209,19 @@ def call_openrouter_api(messages) -> str:
         raise RuntimeError(f"Network error when calling OpenRouter API: {str(e)}")
 
 
-def call_routerairu_api(messages) -> str:
-    """Call LLM via ROUTERAIRU API to generate CAD code."""
+def call_routerairu_api(messages, model=None) -> str:
+    """Call LLM via ROUTERAIRU API to generate CAD code.
+    
+    Args:
+        messages: List of messages to send
+        model: Optional model override (uses config default if None)
+    """
     from openai import OpenAI
     
     _reload_config()
     
     routerairu_api_key = getattr(load_env, 'ROUTERAIRU_API_KEY', '')
-    routerairu_model = getattr(load_env, 'ROUTERAIRU_MODEL', 'google/gemini-3-flash-preview')
+    routerairu_model = model or getattr(load_env, 'ROUTERAIRU_MODEL', 'google/gemini-3-flash-preview')
 
     if not routerairu_api_key:
         raise ValueError("ROUTERAIRU_API_KEY not set in environment")
@@ -253,14 +263,20 @@ workflow = StateGraph(state_schema=MessagesState)
 _ollama_llm = None
 
 
-def _get_ollama_llm():
-    """Get or create Ollama LLM instance with current model from config."""
+def _get_ollama_llm(model=None):
+    """Get or create Ollama LLM instance with current model from config.
+    
+    Args:
+        model: Optional model override (uses config default if None)
+    """
     global _ollama_llm
-    if _ollama_llm is None:
+    # Reload config to get latest model setting
+    _reload_config()
+    current_model = model or getattr(load_env, 'OLLAMA_MODEL', OLLAMA_MODEL)
+    
+    # Create new instance if model changed or not yet created
+    if _ollama_llm is None or (_ollama_llm.model_name if hasattr(_ollama_llm, 'model_name') else None) != current_model:
         from langchain_ollama import ChatOllama
-        # Reload config to get latest model setting
-        _reload_config()
-        current_model = getattr(load_env, 'OLLAMA_MODEL', OLLAMA_MODEL)
         _ollama_llm = ChatOllama(
             model=current_model,
             base_url="http://localhost:11434",
@@ -424,11 +440,15 @@ def _prepare_messages_with_system(state: MessagesState, system_content: str) -> 
     return messages
 
 
-def _invoke_llm(messages: list) -> str:
+def _invoke_llm(messages: list, model: str = None) -> str:
     """Invoke the appropriate LLM backend and return response content.
     
     Determines which LLM to use at runtime based on current configuration,
     so that provider changes in settings take effect immediately.
+    
+    Args:
+        messages: List of messages to send
+        model: Optional model override (uses config default if None)
     """
     # Reload config to get latest provider and model settings
     _reload_config()
@@ -439,11 +459,11 @@ def _invoke_llm(messages: list) -> str:
     current_use_routerairu = getattr(load_env, 'USE_ROUTERAIRU', False)
     
     if current_use_openrouter:
-        return call_openrouter_api(messages)
+        return call_openrouter_api(messages, model=model)
     elif current_use_routerairu:
-        return call_routerairu_api(messages)
+        return call_routerairu_api(messages, model=model)
     elif current_use_ollama:
-        response = _get_ollama_llm().invoke(messages)
+        response = _get_ollama_llm(model).invoke(messages)
         return response.content
     else:
         raise ValueError("No LLM provider configured. Please select a provider in GenCAD settings.")
