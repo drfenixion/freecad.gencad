@@ -34,7 +34,7 @@ If the code needs corrections, respond with the FULL corrected FreeCAD Python co
 IMPORTANT: Your response MUST be either exactly "verified - ok" or the corrected FreeCAD code.
 
 """
-VERIFICATION_SYSTEM_PROMPT = VERIFICATION_SYSTEM_PROMPT + VERIFY_INSTRUCTION
+VERIFICATION_SYSTEM_PROMPT_PLUS_INSTRUCTION = VERIFICATION_SYSTEM_PROMPT + VERIFY_INSTRUCTION
 
 VISUAL_VERIFICATION_SYSTEM_PROMPT = f"""You are an expert CAD engineer working with FreeCAD 1.0.1. with vision capabilities.
 
@@ -53,6 +53,8 @@ Check the following:
 8. No redundant overlaps between elements.
 9. All parameters, and values match the user's request
 
+IMPORTANT: BE PRECISE!
+
 Also review the generated code to ensure it matches the request parameters.
 
 If the screenshots and code both correctly implement the user request, respond exactly with: verified - ok
@@ -62,7 +64,7 @@ If there are visual discrepancies or code issues, respond with the FULL correcte
 IMPORTANT: Your response MUST be either exactly "verified - ok" or the corrected FreeCAD code.
 
 """
-VISUAL_VERIFICATION_SYSTEM_PROMPT = VISUAL_VERIFICATION_SYSTEM_PROMPT + VERIFY_INSTRUCTION
+VISUAL_VERIFICATION_SYSTEM_PROMPT_PLUS_INSTRUCTION = VISUAL_VERIFICATION_SYSTEM_PROMPT + VERIFY_INSTRUCTION
 
 
 def verify_generated_code(user_request: str, generated_code: str) -> dict:
@@ -88,7 +90,7 @@ Code:
 """
 
     messages = [
-        SystemMessage(content=VERIFICATION_SYSTEM_PROMPT),
+        SystemMessage(content=VERIFICATION_SYSTEM_PROMPT_PLUS_INSTRUCTION),
         HumanMessage(content=user_prompt),
     ]
 
@@ -188,7 +190,7 @@ Generated Code:
 """
 
     messages = [
-        SystemMessage(content=VISUAL_VERIFICATION_SYSTEM_PROMPT),
+        SystemMessage(content=VISUAL_VERIFICATION_SYSTEM_PROMPT_PLUS_INSTRUCTION),
         HumanMessage(content=user_prompt, additional_kwargs={"images": valid_paths}),
     ]
 
