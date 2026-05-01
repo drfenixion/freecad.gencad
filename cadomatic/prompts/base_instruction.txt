@@ -74,13 +74,6 @@ sketch = body.newObject("Sketcher::SketchObject", "Sketch")
 sketch.AttachmentSupport = (body.getObject("XY_Plane"), [""]) # incorrect, it leads to <class 'TypeError'>: Expects sequence of items of type DocObj, (DocObj,SubName), or (DocObj, (SubName,...))
 sketch.AttachmentSupport = (body.getObject("XY_Plane"), ) # correct
 
-
-Check for Gui is Active and if no deactivate code needed it!
-import FreeCAD
-if FreeCAD.GuiUp:
-    print("GUI is active")
-else:
-    print("GUI is not active (headless or disabled)")
 DONT USE if __name__ == "__main__":!
 
 Create new document and set it active!
