@@ -1023,9 +1023,9 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
                 # Set camera view direction
                 view.setViewDirection(direction)
                 # Small delay to allow view to update
-                # time.sleep(0.5)
+                time.sleep(0.1)
                 FreeCADGui.SendMsgToActiveView("ViewFit")
-                # time.sleep(0.5)
+                time.sleep(0.1)
                 screenshot_path = os.path.join(gen_dir, f"screenshot_{view_name}.png")
                 view.saveImage(screenshot_path, 720, 480, 'White')
                 screenshot_paths.append(screenshot_path)
@@ -1119,7 +1119,7 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
 
                 # Step 2: Code verification (if enabled)
                 if use_code_verification:
-                    msg = "=" * 60 + '\n' + "⟳ Running LLM code verification..." + '\n' + "=" * 60
+                    msg = "=" * 60 + '\n' + "⟳ Running part code verification..." + '\n' + "=" * 60
                     if log_callback:
                         log_callback(msg)
                     FreeCAD.Console.PrintMessage(f"{msg}\n")

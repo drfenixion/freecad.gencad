@@ -128,7 +128,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.use_part_verification_checkbox = QtWidgets.QCheckBox()
         self.use_part_verification_checkbox.setChecked(False)
         self.use_part_verification_checkbox.setToolTip("Enable LLM verification of generated code parameters against user request after successful test execution")
-        modeling_options_layout.addRow("Use LLM Part Verification:", self.use_part_verification_checkbox)
+        modeling_options_layout.addRow("Use Part Code Verification:", self.use_part_verification_checkbox)
 
         # 7) Use LLM visual part verification
         self.use_part_visual_verification_checkbox = QtWidgets.QCheckBox()
