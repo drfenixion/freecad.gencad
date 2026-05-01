@@ -142,6 +142,7 @@ class GenCADProgressDialog(QtWidgets.QDialog):
         def worker():
             """Worker thread function."""
             cancelled = False
+            already_signaled = False
             try:
                 self.log("=" * 60)
                 self.log("Starting CAD script generation")
@@ -166,6 +167,11 @@ class GenCADProgressDialog(QtWidgets.QDialog):
                     self.log("✗ Generation returned no result")
                     self.log("=" * 60)
                     self.set_status("Error: No result")
+                    # Signal failure to main thread
+                    self.is_running = False
+                    already_signaled = True
+                    self.generation_complete.emit(None, "Generation failed")
+                    return
 
             except Exception as e:
                 self.error = str(e)
@@ -173,10 +179,13 @@ class GenCADProgressDialog(QtWidgets.QDialog):
                 self.log(f"✗ Error: {str(e)}")
                 self.log("=" * 60)
                 self.set_status(f"Error: {str(e)}")
+                self.is_running = False
+                already_signaled = True
+                self.generation_complete.emit(None, str(e))
             finally:
                 self.is_running = False
-                # Signal completion to main thread (only if not cancelled)
-                if not cancelled:
+                # Signal completion to main thread (only if not cancelled and not already handled)
+                if not cancelled and not already_signaled:
                     self.generation_complete.emit(self.result, self.error)
 
         # Start worker thread
@@ -185,12 +194,15 @@ class GenCADProgressDialog(QtWidgets.QDialog):
 
     def _on_generation_complete(self, result, error):
         """Called when generation completes (in the main thread)."""
-        # Не останавливаем спиннер здесь - он будет остановлен после цикла исправлений
-        # через метод stop_progress()
-        # Cancel button stays enabled during fix loop
-        # Only disable close button if generation wasn't cancelled
-        if not self.cancel_requested:
-            self.close_button.setEnabled(False)
+        if result is None and error:
+            # Generation failed - stop spinner and enable close button
+            self.stop_progress(success=False)
+        elif result is not None:
+            # Generation succeeded - continue with callback (fix loop may run)
+            # Cancel button stays enabled during fix loop
+            # Only disable close button if generation wasn't cancelled
+            if not self.cancel_requested:
+                self.close_button.setEnabled(False)
 
         if self.on_complete_callback:
             self.on_complete_callback(result, error)
