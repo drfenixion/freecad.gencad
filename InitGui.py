@@ -67,8 +67,15 @@ class GenCADWorkbench(Workbench):
 
     def Initialize(self):
         """This function is executed when FreeCAD starts"""
-        from cadomatic.src.dependency_checker import deps_check_and_install
-        deps_check_and_install(FreeCAD, FreeCADGui)
+        # Only check dependencies on first launch (using FreeCAD parameter system)
+        param_group = FreeCAD.ParamGet("User parameter:BaseApp/Workbench/GenCAD")
+        deps_checked = param_group.GetBool("DependenciesChecked", False)
+        
+        if not deps_checked:
+            from cadomatic.src.dependency_checker import deps_check_and_install
+            deps_check_and_install(FreeCAD, FreeCADGui)
+            # Mark as checked after successful check
+            param_group.SetBool("DependenciesChecked", True)
 
         # Import commands
         import GenCADCommands
