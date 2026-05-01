@@ -111,7 +111,7 @@ For Windows, download from: https://ollama.com/download/windows
 ## Workflow
 
 ```
-user_input + system_instruction → (LLM → generated code → test execution in FreeCAD) → loop of code fixing
+user_input + system_instruction → (LLM → generated code → test execution in FreeCAD) → loop of code fixing and verifying
 ```
 
 1. User provides a text description of the desired CAD model
@@ -119,7 +119,8 @@ user_input + system_instruction → (LLM → generated code → test execution i
 3. LLM generates FreeCAD Python code
 4. Code is executed in a temporary FreeCAD document
 5. If errors occur, the error log is sent back to the LLM for fixing
-6. Steps 3–5 repeat until success or max retries is reached
+6. If no errors, a visual and code checks (model parameters suits to user request) are performed. Visual check from current top VLM can be wrong.
+7. Steps 3–6 repeat until success or max retries is reached
 
 ## Project Structure
 
