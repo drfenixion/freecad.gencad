@@ -1003,28 +1003,34 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
         gen_dir = _get_gen_dir()
         screenshot_paths = []
         
-        # View directions for FreeCAD: (x, y, z) camera position relative to origin
-        view_directions = {
-            "isometric": (1, 1, 1),
-            # "top": (0, 0, 1),
-            # "front": (0, -1, 0),
-            # "right": (1, 0, 0),
-            # "bottom": (0, 0, -1),
-            # "rear": (0, 1, 0),
-            # "left": (-1, 0, 0),
-        }
-        
+        def view_methods(view, view_name=None):
+            view_methods = {
+                "isometric": view.viewIsometric,
+                # "top":       view.viewTop,
+                # "front":     view.viewFront,
+                # "right":     view.viewRight,
+                # "bottom":    view.viewBottom,
+                # "rear":      view.viewBack,  # в API используется viewBack, а не viewRear
+                # "left":      view.viewLeft,
+            }
+
+            if view_name:
+               return view_methods[view_name]()
+            return view_methods
+
         try:
             
             view = FreeCADGui.ActiveDocument.ActiveView
             view.setAnimationEnabled(False)
             
-            for view_name, direction in view_directions.items():
+            for view_name, direction in view_methods(view).items():
                 # Set camera view direction
-                view.setViewDirection(direction)
+                # view.setViewDirection(direction)
+                view_methods(view, view_name)
                 # Small delay to allow view to update
                 time.sleep(0.1)
-                FreeCADGui.SendMsgToActiveView("ViewFit")
+                view.fitAll()
+                # FreeCADGui.SendMsgToActiveView("ViewFit")
                 time.sleep(0.1)
                 screenshot_path = os.path.join(gen_dir, f"screenshot_{view_name}.png")
                 view.saveImage(screenshot_path, 720, 480, 'White')
