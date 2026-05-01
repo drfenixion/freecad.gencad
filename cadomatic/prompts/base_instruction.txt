@@ -93,3 +93,6 @@ The 'Midplane' property being set for the extrusion of HoleSketch is deprecated 
 Insted of 'Midplane' use Pocket_obj.SideType = 'Symmetric'.
 
 Dont print any message to console.
+
+Abbreviations:
+ro = radius outer, ri = radius inner
