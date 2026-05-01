@@ -33,8 +33,8 @@ If the code needs corrections, respond with the FULL corrected FreeCAD Python co
 
 IMPORTANT: Your response MUST be either exactly "verified - ok" or the corrected FreeCAD code.
 
-{VERIFY_INSTRUCTION}"""
-
+"""
+VERIFICATION_SYSTEM_PROMPT = VERIFICATION_SYSTEM_PROMPT + VERIFY_INSTRUCTION
 
 VISUAL_VERIFICATION_SYSTEM_PROMPT = f"""You are an expert CAD engineer working with FreeCAD 1.0.1. with vision capabilities.
 
@@ -61,7 +61,8 @@ If there are visual discrepancies or code issues, respond with the FULL correcte
 
 IMPORTANT: Your response MUST be either exactly "verified - ok" or the corrected FreeCAD code.
 
-{VERIFY_INSTRUCTION}"""
+"""
+VISUAL_VERIFICATION_SYSTEM_PROMPT = VISUAL_VERIFICATION_SYSTEM_PROMPT + VERIFY_INSTRUCTION
 
 
 def verify_generated_code(user_request: str, generated_code: str) -> dict:
@@ -156,8 +157,9 @@ def verify_part_visual(screenshot_paths: list, user_request: str, generated_code
         }
 
     # Build the verification prompt
+    # You are given {len(valid_paths)} screenshots of the generated part from different views (isometric, top, front, right, bottom, rear, left).
     user_prompt = f"""
-You are given {len(valid_paths)} screenshots of the generated part from different views (isometric, top, front, right, bottom, rear, left).
+You are given {len(valid_paths)} screenshots of the generated part from view (isometric).
 
 User Request: {user_request}
 

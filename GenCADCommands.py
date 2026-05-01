@@ -1006,12 +1006,12 @@ Please provide a corrected FreeCAD script. Keep the logic same, just correct the
         # View directions for FreeCAD: (x, y, z) camera position relative to origin
         view_directions = {
             "isometric": (1, 1, 1),
-            "top": (0, 0, 1),
-            "front": (0, -1, 0),
-            "right": (1, 0, 0),
-            "bottom": (0, 0, -1),
-            "rear": (0, 1, 0),
-            "left": (-1, 0, 0),
+            # "top": (0, 0, 1),
+            # "front": (0, -1, 0),
+            # "right": (1, 0, 0),
+            # "bottom": (0, 0, -1),
+            # "rear": (0, 1, 0),
+            # "left": (-1, 0, 0),
         }
         
         try:
