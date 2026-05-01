@@ -97,7 +97,6 @@ Create new document and set it active!
 DONT DELETE EXISTING OBJECTS!
 
 Dont forget required imports: import math, etc used.
-'PartDesign::Sketch' is not a document object type
 
 The 'Midplane' property being set for the extrusion of HoleSketch is deprecated and has been replaced by the 'SideType' property in FeatureExtrude. Please update your script, this property will be removed in a future version.
 Insted of 'Midplane' use Pocket_obj.SideType = 'Symmetric'.
