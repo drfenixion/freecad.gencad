@@ -269,34 +269,34 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         deps_group.setLayout(deps_layout)
         layout.addWidget(deps_group)
 
-        # === Ollama usage (Linux) ===
-        ollama_group = QtWidgets.QGroupBox("Ollama usage on Linux (can be free quota for cloud models)")
-        ollama_layout = QtWidgets.QVBoxLayout()
+        # # === Ollama usage (Linux) ===
+        # ollama_group = QtWidgets.QGroupBox("Ollama usage on Linux (can be free quota for cloud models)")
+        # ollama_layout = QtWidgets.QVBoxLayout()
 
-        ollama_instructions = QtWidgets.QPlainTextEdit()
-        ollama_instructions.setReadOnly(True)
-        ollama_instructions.setMaximumHeight(150)
-        ollama_instructions.setPlainText(
-            "# Install ollama\n"
-            "curl -fsSL https://ollama.com/install.sh | sh\n\n"
-            "# Register Ollama account on official site.\n\n"
-            "# Do device signin and follow it instruction.\n"
-            "ollama signin\n\n"
-            "# Pull cloud model.\n"
-            "ollama pull gemini-3-flash-preview:cloud\n\n"
-            "# Select Ollama Provider in these Setting and fill that model (gemini-3-flash-preview:cloud) to Ollama Model field."
-        )
-        ollama_layout.addWidget(ollama_instructions)
+        # ollama_instructions = QtWidgets.QPlainTextEdit()
+        # ollama_instructions.setReadOnly(True)
+        # ollama_instructions.setMaximumHeight(150)
+        # ollama_instructions.setPlainText(
+        #     "# Install ollama\n"
+        #     "curl -fsSL https://ollama.com/install.sh | sh\n\n"
+        #     "# Register Ollama account on official site.\n\n"
+        #     "# Do device signin and follow it instruction.\n"
+        #     "ollama signin\n\n"
+        #     "# Pull cloud model.\n"
+        #     "ollama pull gemini-3-flash-preview:cloud\n\n"
+        #     "# Select Ollama Provider in these Setting and fill that model (gemini-3-flash-preview:cloud) to Ollama Model field."
+        # )
+        # ollama_layout.addWidget(ollama_instructions)
 
-        # Download link for Windows
-        ollama_link_label = QtWidgets.QLabel()
-        ollama_link_label.setText('Ollama usage on Win look likes above way but GUI: <a href="https://ollama.com/download/windows">https://ollama.com/download/windows</a>')
-        ollama_link_label.setOpenExternalLinks(True)
-        ollama_link_label.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-        ollama_layout.addWidget(ollama_link_label)
+        # # Download link for Windows
+        # ollama_link_label = QtWidgets.QLabel()
+        # ollama_link_label.setText('Ollama usage on Win look likes above way but GUI: <a href="https://ollama.com/download/windows">https://ollama.com/download/windows</a>')
+        # ollama_link_label.setOpenExternalLinks(True)
+        # ollama_link_label.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        # ollama_layout.addWidget(ollama_link_label)
 
-        ollama_group.setLayout(ollama_layout)
-        layout.addWidget(ollama_group)
+        # ollama_group.setLayout(ollama_layout)
+        # layout.addWidget(ollama_group)
 
         # === Disclaimer ===
         disclaimer_group = QtWidgets.QGroupBox("Disclaimer")
