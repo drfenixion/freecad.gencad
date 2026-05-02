@@ -37,11 +37,11 @@
 ### Via FreeCAD Addon Manager
 
 1. Open FreeCAD
-2. Go to **Tools → Addon Manager**
-3. Click the **Edit -> Preferencies -> Addon Manager Options**
-4. Go to the **Custom repositories** block
-5. Click **+** button and enter the repository URL: `https://github.com/drfenixion/freecad.gencad`, branch: 'main'
-6. Click **OK** to save the settings
+2. Click the **Edit -> Preferencies -> Addon Manager Options**
+3. Go to the **Custom repositories** block
+4. Click **+** button and enter the repository URL: `https://github.com/drfenixion/freecad.gencad`, branch: 'main'
+5. Click **OK** to save the settings
+6. Go to **Tools → Addon Manager**
 7. Search for **GenCAD** in the Addon Manager
 8. Click **Install**
 9. Restart FreeCAD
