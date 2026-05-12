@@ -15,7 +15,7 @@
   - Circular placement: PolarPattern or Placement
   - RAG context with FreeCAD documentaion (optional)
   - Fasteners workbench integration (optional)
-  - Result Code parameters model verify (optional)
+  - Result code parameters model verify (optional)
   - Visual model verify (optional)
 
 ![GenCAD Logo](images/gencad_big_logo.png)
