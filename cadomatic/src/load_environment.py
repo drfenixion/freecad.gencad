@@ -60,6 +60,9 @@ class LoadEnv:
             except (json.JSONDecodeError, IOError):
                 print("Could not load GenCAD config file")
     
+        # Store reasoning setting
+        self.USE_REASONING = self.gencad_config.get('use_reasoning', False)
+
     def _apply_gencad_config(self):
         """Apply GenCAD configuration to override environment variables"""
         if self.gencad_config:

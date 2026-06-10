@@ -124,26 +124,32 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.use_rag_checkbox.setToolTip("Use RAG (Retrieval-Augmented Generation) to include FreeCAD documentation context")
         modeling_options_layout.addRow("Use RAG Context:", self.use_rag_checkbox)
 
-        # 6) Use LLM part verification
+        # 6) Use Reasoning/Thinking
+        self.use_reasoning_checkbox = QtWidgets.QCheckBox()
+        self.use_reasoning_checkbox.setChecked(False)
+        self.use_reasoning_checkbox.setToolTip("Enable reasoning/thinking mode for the LLM (supported by some models like DeepSeek R1, Qwen3, etc.)")
+        modeling_options_layout.addRow("Use Reasoning:", self.use_reasoning_checkbox)
+
+        # 7) Use LLM part verification
         self.use_part_verification_checkbox = QtWidgets.QCheckBox()
         self.use_part_verification_checkbox.setChecked(False)
         self.use_part_verification_checkbox.setToolTip("Enable LLM verification of generated code parameters against user request after successful test execution")
         modeling_options_layout.addRow("Use Part Code Verification:", self.use_part_verification_checkbox)
 
-        # 7) Use LLM visual part verification
+        # 8) Use LLM visual part verification
         self.use_part_visual_verification_checkbox = QtWidgets.QCheckBox()
         self.use_part_visual_verification_checkbox.setChecked(False)
         self.use_part_visual_verification_checkbox.setToolTip("Enable visual verification of generated part screenshot against user request after successful test execution")
         modeling_options_layout.addRow("Use Visual Part Verification:", self.use_part_visual_verification_checkbox)
 
-        # 8) Max retries for fixing script
+        # 9) Max retries for fixing script
         self.max_retries_spinbox = QtWidgets.QSpinBox()
         self.max_retries_spinbox.setRange(1, 10)
         self.max_retries_spinbox.setValue(5)
         self.max_retries_spinbox.setToolTip("Maximum number of retries for fixing failed FreeCAD scripts")
         modeling_options_layout.addRow("Max Retries for Fix:", self.max_retries_spinbox)
 
-        # 9) Use Fasteners WB
+        # 10) Use Fasteners WB
         self.use_fasteners_wb_checkbox = QtWidgets.QCheckBox()
         self.use_fasteners_wb_checkbox.setChecked(False)
         self.use_fasteners_wb_checkbox.setToolTip("Use Fasteners workbench for attaching fasteners to circular edges")
@@ -453,6 +459,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
         self.workbench_combo.setCurrentText(config.get_setting('workbench', 'Use PartDesign WB'))
         self.circular_placement_combo.setCurrentText(config.get_setting('circular_placement', 'Use PartDesign_PolarPattern'))
         self.use_rag_checkbox.setChecked(config.get_setting('use_rag', False))
+        self.use_reasoning_checkbox.setChecked(config.get_setting('use_reasoning', False))
         self.use_fasteners_wb_checkbox.setChecked(config.get_setting('use_fasteners_wb', False))
         self.use_part_verification_checkbox.setChecked(config.get_setting('use_part_verification', False))
         self.use_part_visual_verification_checkbox.setChecked(config.get_setting('use_part_visual_verification', False))
@@ -514,6 +521,7 @@ class GenCADSettingsDialog(QtWidgets.QDialog):
             'workbench': self.workbench_combo.currentText(),
             'circular_placement': self.circular_placement_combo.currentText(),
             'use_rag': self.use_rag_checkbox.isChecked(),
+            'use_reasoning': self.use_reasoning_checkbox.isChecked(),
             'use_fasteners_wb': self.use_fasteners_wb_checkbox.isChecked(),
             'use_part_verification': self.use_part_verification_checkbox.isChecked(),
             'use_part_visual_verification': self.use_part_visual_verification_checkbox.isChecked(),

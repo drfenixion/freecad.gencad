@@ -163,11 +163,13 @@ def call_openrouter_api(messages, model=None) -> str:
     if not openrouter_api_key:
         raise ValueError("OPENROUTER_API_KEY not set in environment")
 
+    use_reasoning = getattr(load_env, 'USE_REASONING', False)
+
     payload = {
         "model": openrouter_model,
         "messages": convert_langchain_messages_to_dicts(messages),
         "temperature": 0.2,
-        "max_tokens": 2048,
+        "max_tokens": 2048 if not use_reasoning else 4096,
         "provider": {
             "allow_fallbacks": False,
             "order": [],
@@ -177,6 +179,10 @@ def call_openrouter_api(messages, model=None) -> str:
             "control": {"no_store": True}
         }
     }
+
+    # Enable reasoning/thinking if configured
+    if use_reasoning:
+        payload["reasoning"] = {"max_tokens": 4096}
 
     headers = {
         "Authorization": f"Bearer {openrouter_api_key}",
@@ -226,19 +232,31 @@ def call_routerairu_api(messages, model=None) -> str:
     if not routerairu_api_key:
         raise ValueError("ROUTERAIRU_API_KEY not set in environment")
 
+    use_reasoning = getattr(load_env, 'USE_REASONING', False)
+
     client = OpenAI(
         api_key=routerairu_api_key,
         base_url="https://routerai.ru/api/v1"
     )
 
-    extra_body = {
-        "thinking_config": {"thinking_budget": 0},
-        "chat_template_kwargs": {"enable_thinking": False},
-        "enable_thinking": False,
-        "cache_control": {"type": "ephemeral"},
-        "stream_options": {"include_usage": False},
-        "reasoning_effort": "low" if routerairu_model.startswith("openai/") else "none",
-    }
+    if use_reasoning:
+        extra_body = {
+            "thinking_config": {"thinking_budget": 4096},
+            "chat_template_kwargs": {"enable_thinking": True},
+            "enable_thinking": True,
+            "cache_control": {"type": "ephemeral"},
+            "stream_options": {"include_usage": False},
+            "reasoning_effort": "height" if routerairu_model.startswith("openai/") else "medium",
+        }
+    else:
+        extra_body = {
+            "thinking_config": {"thinking_budget": 0},
+            "chat_template_kwargs": {"enable_thinking": False},
+            "enable_thinking": False,
+            "cache_control": {"type": "ephemeral"},
+            "stream_options": {"include_usage": False},
+            "reasoning_effort": "low" if routerairu_model.startswith("openai/") else "none",
+        }
 
     try:
         response = client.chat.completions.create(
@@ -277,11 +295,13 @@ def _get_ollama_llm(model=None):
     # Create new instance if model changed or not yet created
     if _ollama_llm is None or (_ollama_llm.model_name if hasattr(_ollama_llm, 'model_name') else None) != current_model:
         from langchain_ollama import ChatOllama
+        use_reasoning = getattr(load_env, 'USE_REASONING', False)
         _ollama_llm = ChatOllama(
             model=current_model,
             base_url="http://localhost:11434",
             validate_model_on_init=True,
             temperature=0.1,
+            num_predict=8192 if use_reasoning else 4096,
         )
     return _ollama_llm
 

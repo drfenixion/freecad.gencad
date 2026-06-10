@@ -36,6 +36,7 @@ class GenCADConfig:
             'workbench': 'Use PartDesign WB',
             'circular_placement': 'Use PartDesign_PolarPattern',
             'use_rag': False,  # RAG enabled by default
+            'use_reasoning': False,  # Reasoning/thinking enabled by default
             'use_fasteners_wb': False,  # Fasteners WB disabled by default
             'use_part_verification': True,  # LLM part verification enabled by default
             'use_part_visual_verification': False,  # Visual part verification disabled by default
