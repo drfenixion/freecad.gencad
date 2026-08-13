@@ -14,7 +14,7 @@
   - Workbench: PartDesign or Part
   - Circular placement: PolarPattern or Placement
   - RAG context with FreeCAD documentaion (optional)
-  - Reasoning (optional) + Give much better result (let you use cheap models like Deepseek V4 Pro 0813/Flash 0731) - Long time execution (~1 min to 1 loop)
+  - Reasoning (optional) + Give much better result (let you use low price models like Deepseek V4 Pro 0813/Flash 0731) - Long time execution (~1 min to 1 loop)
   - Fasteners workbench integration (optional)
   - Result code parameters model verify (optional)
   - Visual model verify (optional)
