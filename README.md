@@ -14,7 +14,7 @@
   - Workbench: PartDesign or Part
   - Circular placement: PolarPattern or Placement
   - RAG context with FreeCAD documentaion (optional)
-  - Reasoning (optional) + Give much better result (let you use low price models like Deepseek V4 Pro 0813/Flash 0731) - Long time execution (~1 min to 1 loop)
+  - Reasoning (optional) + Give much better result - Long time execution (~1 min to 1 loop)
   - Fasteners workbench integration (optional)
   - Result code parameters model verify (optional)
   - Visual model verify (optional)
@@ -33,7 +33,7 @@
 >
 > **The generated model may be inaccurate or incorrect. Always verify the result.**
 >
-> **IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.**
+> **IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.** Model GPT-6-Astra currently delivers the best results; it is recommended with GenCAD.
 
 ## Installation
 
