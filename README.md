@@ -33,7 +33,7 @@
 >
 > **The generated model may be inaccurate or incorrect. Always verify the result.**
 >
-> **IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.** Model GPT-6-Astra currently delivers the best results; it is recommended with GenCAD.
+> **IMPORTANT: Use top-tier models from well-known providers (e.g., Google, Anthropic, OpenAI). Weak or small models may be unsuitable for use and produce incorrect or unusable CAD code.** Model anthropic/claude-opus-5.5 currently delivers the best results; it is recommended with GenCAD.
 
 ## Installation
 
